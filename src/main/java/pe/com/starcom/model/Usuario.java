@@ -6,8 +6,7 @@ import java.util.Date;
 import javax.persistence.*;
 
 @Entity
-@NamedQueries({ @NamedQuery(name = "Usuario.findByUsername", query = "SELECT u "
-		+ "FROM Usuario u "
+@NamedQueries({ @NamedQuery(name = "Usuario.findByUsername", query = "SELECT u " + "FROM Usuario u "
 		+ "WHERE u.usuario =:username AND u.estado =:estado") })
 public class Usuario implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -27,16 +26,6 @@ public class Usuario implements Serializable {
 	private byte[] password;
 	@Transient
 	private String clave;
-	@Column
-	private String usuarioRegistra;
-	@Column
-	private String usuarioModifica;
-	@Column
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date fechaCreacion;
-	@Column
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date fechaModificacion;
 	@Column
 	private String estado;
 	@JoinColumn(name = "idRol")
@@ -94,14 +83,6 @@ public class Usuario implements Serializable {
 		this.clave = clave;
 	}
 
-	public Date getFechaCreacion() {
-		return fechaCreacion;
-	}
-
-	public void setFechaCreacion(Date fechaCreacion) {
-		this.fechaCreacion = fechaCreacion;
-	}
-
 	public String getEstado() {
 		return estado;
 	}
@@ -118,30 +99,6 @@ public class Usuario implements Serializable {
 		this.rol = rol;
 	}
 
-	public String getUsuarioRegistra() {
-		return usuarioRegistra;
-	}
-
-	public void setUsuarioRegistra(String usuarioRegistra) {
-		this.usuarioRegistra = usuarioRegistra;
-	}
-
-	public String getUsuarioModifica() {
-		return usuarioModifica;
-	}
-
-	public void setUsuarioModifica(String usuarioModifica) {
-		this.usuarioModifica = usuarioModifica;
-	}
-
-	public Date getFechaModificacion() {
-		return fechaModificacion;
-	}
-
-	public void setFechaModificacion(Date fechaModificacion) {
-		this.fechaModificacion = fechaModificacion;
-	}
-
 	public byte[] getPassword() {
 		return password;
 	}
@@ -154,8 +111,7 @@ public class Usuario implements Serializable {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result
-				+ ((idUsuario == null) ? 0 : idUsuario.hashCode());
+		result = prime * result + ((idUsuario == null) ? 0 : idUsuario.hashCode());
 		return result;
 	}
 
