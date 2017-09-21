@@ -1,0 +1,21 @@
+package gob.servir.workflow.dao;
+
+import gob.servir.workflow.model.Proceso;
+
+import java.util.List;
+
+import javax.faces.model.SelectItem;
+
+public interface ProcesoDao {
+	
+	public abstract Proceso find(Long id);
+	
+	public abstract Proceso save(Proceso obj);
+	
+	public abstract List<Proceso> getListaProceso();
+	
+	public abstract List<SelectItem> getComboProceso();
+	
+	public abstract List<SelectItem> getComboProcesoFlujo();
+
+}

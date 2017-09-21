@@ -1,0 +1,63 @@
+package gob.servir.workflow.daoImpl;
+
+import gob.servir.workflow.dao.ItemMenuDao;
+import gob.servir.workflow.model.ItemMenu;
+
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+//@Service
+@Repository
+public class ItemMenuDaoImpl implements ItemMenuDao {
+	@PersistenceContext
+	private EntityManager em;
+
+	public ItemMenu find(Long id) {
+		return em.find(ItemMenu.class, id);
+	}
+
+	@Transactional
+	public ItemMenu save(ItemMenu obj) {
+		if (obj.getIdItemMenu() == null) {
+			em.persist(obj);
+			return obj;
+		} else {
+			return em.merge(obj);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<ItemMenu> getListaItemMenu() {
+		Query q = (Query) em
+				.createQuery("select im from ItemMenu im where im.estado =:estado order by im.menu.idMenu asc");
+		q.setParameter("estado", "A");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			as.printStackTrace();
+			return null;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<ItemMenu> getListaMenuItem(Long idMenu, Long idRol) {
+		Query q = (Query) em
+				.createQuery("select im from ItemMenu im where im.rol.idRol =:idRol and im.menu.idMenu =:idMenu and im.estado =:estado");
+		q.setParameter("idRol", idRol);
+		q.setParameter("idMenu", idMenu);
+		q.setParameter("estado", "A");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			as.printStackTrace();
+			return null;
+		}
+	}
+
+}

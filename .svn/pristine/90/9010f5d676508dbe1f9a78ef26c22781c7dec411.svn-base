@@ -1,0 +1,185 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions">
+<h:head>
+	<h:outputStylesheet name="css/cssContent.css" />
+	<style type="text/css">
+.old {
+	background-color: #F2F1E0 !important;
+	background-image: none !important;
+	color: #000000 !important;
+}
+</style>
+</h:head>
+<h:body>
+	<p:poll interval="30" listener="#{bandejaController.getListFlujo}"
+		update="dtLista" />
+	<p:growl id="messages" showDetail="true" life="40000" />
+
+	<p:panel id="datos" header="Bandeja">
+		<table style="width: 100%">
+			<tr valign="top">
+				<td align="left"><p:selectBooleanCheckbox id="mp"
+						value="#{bandejaController.misPendientes}" immediate="true">
+						<p:ajax update="dtLista"
+							listener="#{bandejaController.getListFlujo}" />
+					</p:selectBooleanCheckbox> <h:outputText value="Solo mis pendientes " style="color:red;" /></td>
+				<td align="right"><p:commandButton value=""
+						icon="ui-icon-refresh" immediate="true" update="dtLista"
+						action="#{bandejaController.getListFlujo}" title="Refrescar">
+					</p:commandButton></td>
+			</tr>
+		</table>
+		<p:separator />
+		<!-- <p:scrollPanel style="width:710px;height:451px"> -->
+		<p:dataTable var="model" value="#{bandejaController.listFlujo}"
+			id="dtLista" style="width:100%" rows="15" paginator="true"
+			paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			rowsPerPageTemplate="5,10,15"
+			emptyMessage="#{messages.msgEmptyMessage}"
+			rowStyleClass="#{bandejaController.rolSelec == model.idRol ? 'old' : null}">
+			<f:facet name="header">   
+            Lista de Flujos Pendientes
+        </f:facet>
+			<p:column headerText="N°"
+				style="width:8%; white-space: normal;text-align: justify">
+				<h:outputText value="#{model.idFlujo}" sortBy="#{rol.idRol}" />
+			</p:column>
+			<p:column headerText="Entidad Destino"
+				style="width:50%; white-space: normal;">
+				<h:outputText value="#{model.nombreEntidad}"
+					sortBy="#{model.nombreEntidad}" />
+			</p:column>
+			<!--<p:column headerText="Puesto Tipo" style="width:50%">
+					<h:outputText value="#{model.nombrePuesto}"
+						sortBy="#{model.nombrePuesto}" />
+				</p:column>
+				<p:column headerText="Proceso" style="width:50%">
+					<h:outputText value="#{model.nombreProceso}"
+						sortBy="#{model.nombreProceso}" />
+				</p:column>-->
+			<p:column headerText="Actividad/Compuerta"
+				style="width:50%; white-space: normal;">
+				<h:outputText value="#{model.nombreActividad}"
+					sortBy="#{model.nombreActividad}" id="nombAct" />
+				<pe:tooltip for="nombAct" value="#{model.descripcionActividad}"
+					showEffect="fadeIn" hideEffect="fadeIn" atPosition="top center"
+					myPosition="bottom center" />
+			</p:column>
+			<p:column headerText="Fecha Hora" style="width:30%">
+				<h:outputText value="#{model.fechaHora}" />
+			</p:column>
+			<!--<p:column headerText="Estado" style="width:10%">
+					<h:outputText value="#{model.estadoFlujo}"
+						sortBy="#{model.estadoFlujo}" />
+				</p:column>-->
+			<p:column headerText="Opciones" style="width:35%">
+				<p:commandButton id="btnComp" value="" icon="ui-icon-arrow-4-diag"
+					update=":frm:pnlEdit"
+					disabled="#{(model.tipo eq 'C' and bandejaController.rolSelec == model.idRol) ? false : true}"
+					title="Atender Comperta" oncomplete="editDialog.show()"
+					immediate="true">
+					<f:setPropertyActionListener value="#{model}"
+						target="#{bandejaController.atender}" />
+					<f:setPropertyActionListener value=""
+						target="#{bandejaController.descripcion}" />
+				</p:commandButton>
+
+				<p:commandButton value="" icon="ui-icon-newwin"
+					disabled="#{(model.tipo eq 'A' and bandejaController.rolSelec == model.idRol) ? false : true}"
+					action="#{atenderFlujoController.atenderSelec}"
+					update=":frm:content" immediate="true" title="Atender Actividad">
+					<f:setPropertyActionListener
+						target="#{contenidoController.includedPage}"
+						value="contenido/atenderFlujo.xhtml" />
+					<f:setPropertyActionListener value="#{model}"
+						target="#{atenderFlujoController.atender}" />
+				</p:commandButton>
+
+				<p:commandButton value="" icon="ui-icon-document"
+					update=":frm:content" immediate="true" title="Ver detalle de flujo">
+					<f:setPropertyActionListener
+						target="#{contenidoController.includedPage}"
+						value="contenido/bandejaDetalleFlujo.xhtml" />
+					<f:setPropertyActionListener value="#{model.idFlujo}"
+						target="#{detalleBandejaController.idFlujo}" />
+					<f:setPropertyActionListener value="#{model}"
+						target="#{detalleBandejaController.modelTableBandejaSelec}" />
+					<f:setPropertyActionListener value="true"
+						target="#{detalleBandejaController.btnflujoVolver}" />
+					<f:setPropertyActionListener value="false"
+						target="#{detalleBandejaController.btnbandejaVolver}" />
+					<f:setPropertyActionListener value="#{model.estadoFlujo}"
+						target="#{detalleBandejaController.estadoFlujo}" />
+				</p:commandButton>
+			</p:column>
+		</p:dataTable>
+		<!-- </p:scrollPanel> -->
+	</p:panel>
+
+	<p:dialog id="dlgEdit" header="Atender Compuerta"
+		widgetVar="editDialog" modal="true" resizable="false" width="450"
+		showEffect="clip" closable="true" hideEffect="fold">
+
+		<p:panel id="pnlEdit">
+			<table cellpadding="2" cellspacing="2">
+				<tr>
+					<td><h:outputText value="N° Flujo: " /> <h:outputText
+							value="#{bandejaController.atender.idFlujo}" style="color:blue;" /></td>
+					<td><h:outputText value="Actividad: " /> <h:outputText
+							value="#{bandejaController.atender.nombreActividad}"
+							style="color:blue;" /></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="Compuerta: " /></td>
+					<td><p:selectOneRadio id="option"
+							value="#{bandejaController.opcionComp}">
+							<f:selectItems value="#{bandejaController.comboCompuerta}" />
+							<p:ajax event="change" process="option"
+								actionListener="#{bandejaController.opcionComp}" />
+						</p:selectOneRadio></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="Descripción de atención:" /></td>
+					<td><p:inputTextarea rows="2" cols="50"
+							value="#{bandejaController.descripcion}" maxlength="600"
+							autoResize="false">
+							<p:ajax event="blur"
+								actionListener="#{bandejaController.descripcion}" />
+						</p:inputTextarea></td>
+				</tr>
+			</table>
+			<f:facet name="footer">
+				<p:commandButton update="dtLista, messages" value="Atender"
+					action="#{atenderFlujoController.atenderFlujo}"
+					icon="ui-icon-check" oncomplete="editDialog.hide()">
+					<f:setPropertyActionListener value="#{bandejaController.atender}"
+						target="#{atenderFlujoController.atender}" />
+					<f:setPropertyActionListener
+						value="#{bandejaController.opcionComp}"
+						target="#{atenderFlujoController.opcionComp}" />
+					<f:setPropertyActionListener
+						value="#{bandejaController.descripcion}"
+						target="#{atenderFlujoController.descripcion}" />
+				</p:commandButton>
+			</f:facet>
+		</p:panel>
+	</p:dialog>
+</h:body>
+<p:ajaxStatus
+	style="width:64px;height:64px;position:fixed;right:5px;bottom:5px"
+	id="ajaxStatusPanel">
+	<f:facet name="start">
+		<p:graphicImage value="./imagenes/loading.gif" />
+	</f:facet>
+
+	<f:facet name="complete">
+		<h:outputText value="" />
+	</f:facet>
+</p:ajaxStatus>
+</html>

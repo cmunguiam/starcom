@@ -1,0 +1,17 @@
+package gob.servir.workflow.dao;
+
+import gob.servir.workflow.model.PuestoTipo;
+
+import java.util.List;
+
+import javax.faces.model.SelectItem;
+
+public interface PuestoTipoDao {
+	
+	public abstract PuestoTipo find(Long id);	
+	
+	public abstract List<PuestoTipo> getListaPuesto();
+	
+	public abstract List<SelectItem> getComboPuesto();
+
+}

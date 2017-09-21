@@ -1,0 +1,109 @@
+package gob.servir.workflow.daoImpl;
+
+import gob.servir.workflow.dao.ProcesoDao;
+import gob.servir.workflow.model.Proceso;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.faces.model.SelectItem;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+@Repository
+public class ProcesoDaoImpl implements ProcesoDao {
+	@PersistenceContext
+	private EntityManager em;
+
+	public Proceso find(Long id) {
+		return em.find(Proceso.class, id);
+	}
+
+	@Transactional
+	public Proceso save(Proceso obj) {
+		if (obj.getIdProceso() == null) {
+			em.persist(obj);
+			return obj;
+		} else {
+			return em.merge(obj);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Proceso> getListaProceso() {
+		Query q = (Query) em
+				.createQuery("select p from Proceso p where p.estado =:estado");
+		q.setParameter("estado", "A");
+
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA PROCESO VACIO");
+			return null;
+		}
+	}
+
+	public List<SelectItem> getComboProceso() {
+
+		List<SelectItem> listaCombo = new ArrayList<SelectItem>();
+		List<Proceso> lista = new ArrayList<Proceso>();
+		try {
+			lista = getListaProceso();
+		} catch (Exception as) {
+			as.printStackTrace();
+			SelectItem fila = new SelectItem(0L, "Seleccione proceso");
+			listaCombo.add(fila);
+			return listaCombo;
+		}
+		SelectItem fila = new SelectItem(0L, "Seleccione proceso");
+		listaCombo.add(fila);
+
+		for (Proceso tipo : lista) {
+			fila = new SelectItem(tipo.getIdProceso(), tipo.getNombre());
+			listaCombo.add(fila);
+		}
+		return listaCombo;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Proceso> getListaProcesoFlujo() {
+		Query q = (Query) em
+				.createQuery("select p from Proceso p where p.estado =:estado and p.tipo =:tipo");
+		q.setParameter("estado", "A");
+		q.setParameter("tipo", "P");
+
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA PROCESO VACIO");
+			return null;
+		}
+	}
+
+	public List<SelectItem> getComboProcesoFlujo() {
+
+		List<SelectItem> listaCombo = new ArrayList<SelectItem>();
+		List<Proceso> lista = new ArrayList<Proceso>();
+		try {
+			lista = getListaProcesoFlujo();
+		} catch (Exception as) {
+			as.printStackTrace();
+			SelectItem fila = new SelectItem(0L, "Seleccione proceso");
+			listaCombo.add(fila);
+			return listaCombo;
+		}
+		SelectItem fila = new SelectItem(0L, "Seleccione proceso");
+		listaCombo.add(fila);
+
+		for (Proceso tipo : lista) {
+			fila = new SelectItem(tipo.getIdProceso(), tipo.getNombre());
+			listaCombo.add(fila);
+		}
+		return listaCombo;
+	}
+
+}

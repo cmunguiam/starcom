@@ -1,0 +1,193 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+	<h:outputStylesheet name="css/cssContent.css" />
+</h:head>
+<h:body>
+	<h:outputStylesheet name="css/cssContent.css" />
+	<p:growl id="messages" showDetail="true" life="40000" />
+	<p:panel id="pnlDatos" header="#{messages.lblRol}">
+		<p:focus context="pnlDatos" />
+		<table cellspacing="4" cellpadding="2">
+			<tr>
+				<td>#{messages.lblDenominacion} <h:outputText value="*"
+						styleClass="obligatorio" />
+				</td>
+				<td><p:inputText id="rol"
+						value="#{rolController.nuevoRol.nombre}" tabindex="1"
+						maxlength="60" style=" width : 200px;" /></td>
+			</tr>
+		</table>
+		<p:separator />
+		<table>
+			<tr>
+				<td><p:commandButton value="#{messages.btnPermiso}"
+						icon="ui-icon-disk" tabindex="2" action="#{rolController.permiso}"
+						update=":frm:pnlPermiso,messages" /></td>
+				<td><p:commandButton value="#{messages.btnCancelar}"
+						update="pnlDatos" action="#{rolController.limpiar}"
+						icon="ui-icon-close" tabindex="3" /></td>
+			</tr>
+		</table>
+		<p:separator />
+		<p:dataTable var="rol" value="#{rolController.listaRol}" id="rolList"
+			scrollable="true" scrollHeight="300" paginator="true" rows="13"
+			emptyMessage="#{messages.msgEmptyMessage}"
+			paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			rowsPerPageTemplate="5,10,15">
+
+			<f:facet name="header">  
+            #{messages.lblListRol}
+        </f:facet>
+
+			<p:column headerText="#{messages.lblCodigo}" sortBy="#{rol.idRol}"
+				style="width:10%">
+				<h:outputText value="#{rol.idRol}" />
+			</p:column>
+			<p:column headerText="#{messages.lblDenominacion}" style="width:60%"
+				sortBy="#{rol.nombre}">
+				<h:outputText value="#{rol.nombre}" />
+			</p:column>
+			<p:column headerText="#{messages.lblEstado}" style="width:15%"
+				sortBy="#{rol.estado}">
+				<h:outputText value="#{rol.estado.equals('A')?'Activo':'Inactivo'} "
+					sortBy="#{rol.estado}" />
+			</p:column>
+			<p:column headerText="#{messages.lblOpciones}" style="width:15%">
+				<p:commandButton value="" icon="ui-icon-pencil"
+					update=":frm:pnlEdit" oncomplete="editDialog.show()"
+					title="Editar Rol">
+					<f:setPropertyActionListener value="#{rol}"
+						target="#{rolController.modificaRol}" />
+				</p:commandButton>
+
+				<p:commandButton value="" icon="ui-icon-pencil"
+					update=":frm:pnlPermisoM" oncomplete="permisoDialogM.show()"
+					title="Editar Permisos de Rol">
+					<f:setPropertyActionListener value="#{rol.idRol}"
+						target="#{rolController.idRol}" />
+				</p:commandButton>
+
+			</p:column>
+		</p:dataTable>
+	</p:panel>
+
+	<p:dialog id="dlgPermisoM" header="Modificar Permisos de Rol"
+		widgetVar="permisoDialogM" modal="true" resizable="false" width="550"
+		showEffect="clip" hideEffect="fold" closable="true">
+		<p:panel id="pnlPermisoM">
+			<p:focus context="pnlPermisoM" />
+			<p:dataTable id="dtModPermiso" var="permiso"
+				value="#{rolController.listaPermisoRol}" paginator="true" rows="12">
+
+				<f:facet name="header">  
+            #{messages.lblListItemMenu}
+        </f:facet>
+				<p:column headerText="#{messages.lblItemMenu}" style="width:50%">  
+            #{permiso.itemMenu.nombre}  
+        </p:column>
+
+				<p:column headerText="#{messages.lblMenu}" style="width:33%">  
+            #{permiso.itemMenu.menu.nombre}  
+        </p:column>
+
+				<p:column headerText="#{messages.lblRol}" style="width:33%">  
+            #{permiso.rol.nombre}  
+        </p:column>
+				<p:column headerText="#{messages.lblEstado}" style="width:15%">
+					<p:selectBooleanCheckbox value="#{permiso.estado}">
+						<p:ajax update="dtModPermiso"
+							listener="#{rolController.cambiaEstado(permiso)}" />
+					</p:selectBooleanCheckbox>
+				</p:column>
+			</p:dataTable>
+		</p:panel>
+	</p:dialog>
+
+	<p:dialog id="dlgPermiso" header="Permisos de Rol"
+		widgetVar="permisoDialog" modal="true" resizable="false" width="550"
+		showEffect="clip" hideEffect="fold" closable="true">
+		<p:panel id="pnlPermiso">
+			<p:focus context="pnlPermiso" />
+
+			<p:dataTable id="multiCars" var="row"
+				value="#{rolController.dataModelPermiso}" paginator="true" rows="12"
+				selection="#{rolController.listaItemSelec}">
+
+				<f:facet name="header">  
+            #{messages.lblListItemMenu}
+        </f:facet>
+				<p:column selectionMode="multiple" style="width:2%" />
+				<p:column headerText="#{messages.lblItemMenu}" style="width:50%">  
+            #{row.nombre}  
+        </p:column>
+
+				<p:column headerText="#{messages.lblMenu}" style="width:33%">  
+            #{row.menu.nombre}  
+        </p:column>
+
+				<p:column headerText="#{messages.lblEstado}" style="width:15%">  
+         #{row.estado.equals('A')?'Activo':'Inactivo'}
+        </p:column>
+			</p:dataTable>
+
+			<f:facet name="footer">
+				<p:commandButton update="rolList,messages,pnlDatos,:frm:pnlPermiso"
+					value="#{messages.btnGuardar}"
+					actionListener="#{rolController.guardar}" icon="ui-icon-check"
+					oncomplete="permisoDialog.hide()" />
+			</f:facet>
+		</p:panel>
+
+	</p:dialog>
+
+	<p:dialog id="dlgEdit" header="Modificar Rol" widgetVar="editDialog"
+		modal="true" resizable="false" width="350" showEffect="clip"
+		closable="true" hideEffect="fold">
+		<p:panel id="pnlEdit">
+			<p:focus context="pnlEdit" />
+			<table cellpadding="2" cellspacing="2">
+				<tr>
+					<td><h:outputText value="#{messages.lblCodigo}" /></td>
+					<td><h:outputText value="#{rolController.modificaRol.idRol}" /></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="#{messages.lblDenominacion}" /></td>
+					<td><p:inputText value="#{rolController.modificaRol.nombre}"
+							tabindex="4" maxlength="60" style=" width : 180px;" /></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="#{messages.lblEstado}" /></td>
+					<td><p:selectOneMenu
+							value="#{rolController.modificaRol.estado}" tabindex="5"
+							style=" width : 190px;">
+							<f:selectItems value="#{rolController.comboEstado}" />
+						</p:selectOneMenu></td>
+				</tr>
+			</table>
+			<f:facet name="footer">
+				<p:commandButton update="rolList,messages"
+					value="#{messages.btnModificar}" tabindex="6"
+					actionListener="#{rolController.modificar}" icon="ui-icon-check"
+					oncomplete="editDialog.hide()" />
+			</f:facet>
+		</p:panel>
+	</p:dialog>
+</h:body>
+<p:ajaxStatus
+	style="width:64px;height:64px;position:fixed;right:5px;bottom:5px"
+	id="ajaxStatusPanel">
+	<f:facet name="start">
+		<p:graphicImage value="./imagenes/loading.gif" />
+	</f:facet>
+
+	<f:facet name="complete">
+		<h:outputText value="" />
+	</f:facet>
+</p:ajaxStatus>
+</html>

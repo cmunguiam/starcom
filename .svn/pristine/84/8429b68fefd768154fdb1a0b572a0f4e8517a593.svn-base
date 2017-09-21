@@ -1,0 +1,285 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package gob.servir.workflow.model;
+
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Date;
+
+import javax.persistence.*;
+
+/**
+ * 
+ * @author Hever
+ */
+@Entity
+public class DetalleBandeja implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Long idDetalle;
+	@Column
+	private String nroDoc;
+	@Column
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date fechaEmision;
+	@Column
+	private String descripcion;
+	@Column
+	private String urlDocumento;
+	@Column
+	private String usuarioRegistra;
+	@Column
+	private String usuarioModifica;
+	@Lob
+	@Column
+	private byte[] docBlob;
+	@Column
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date fechaCreacion;
+	@Column
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date fechaModificacion;
+	@Column
+	private String estado;
+	@JoinColumns({
+			@JoinColumn(name = "idFlujo", referencedColumnName = "idFlujo"),
+			@JoinColumn(name = "idActividad", referencedColumnName = "idActividad"),
+			@JoinColumn(name = "idProceso", referencedColumnName = "idProceso"),
+			@JoinColumn(name = "correlativo", referencedColumnName = "correlativo")})
+	@ManyToOne(optional = false)
+	private Bandeja bandeja;
+	@JoinColumn(name = "idTipoDocumento")
+	@ManyToOne
+	private TipoDocumento tipoDocumento;
+
+	
+	public DetalleBandeja() {
+		super();
+	}
+
+	public Long getIdDetalle() {
+		return idDetalle;
+	}
+
+	public void setIdDetalle(Long idDetalle) {
+		this.idDetalle = idDetalle;
+	}
+
+	public String getNroDoc() {
+		return nroDoc;
+	}
+
+	public void setNroDoc(String nroDoc) {
+		this.nroDoc = nroDoc;
+	}
+
+	public Date getFechaEmision() {
+		return fechaEmision;
+	}
+
+	public void setFechaEmision(Date fechaEmision) {
+		this.fechaEmision = fechaEmision;
+	}
+
+	public String getDescripcion() {
+		return descripcion;
+	}
+
+	public void setDescripcion(String descripcion) {
+		this.descripcion = descripcion;
+	}
+
+	public String getUrlDocumento() {
+		return urlDocumento;
+	}
+
+	public void setUrlDocumento(String urlDocumento) {
+		this.urlDocumento = urlDocumento;
+	}
+
+	public String getUsuarioRegistra() {
+		return usuarioRegistra;
+	}
+
+	public void setUsuarioRegistra(String usuarioRegistra) {
+		this.usuarioRegistra = usuarioRegistra;
+	}
+
+	public String getUsuarioModifica() {
+		return usuarioModifica;
+	}
+
+	public void setUsuarioModifica(String usuarioModifica) {
+		this.usuarioModifica = usuarioModifica;
+	}
+
+	public byte[] getDocBlob() {
+		return docBlob;
+	}
+
+	public void setDocBlob(byte[] docBlob) {
+		this.docBlob = docBlob;
+	}
+
+	public Date getFechaCreacion() {
+		return fechaCreacion;
+	}
+
+	public void setFechaCreacion(Date fechaCreacion) {
+		this.fechaCreacion = fechaCreacion;
+	}
+
+	public Date getFechaModificacion() {
+		return fechaModificacion;
+	}
+
+	public void setFechaModificacion(Date fechaModificacion) {
+		this.fechaModificacion = fechaModificacion;
+	}
+
+	public String getEstado() {
+		return estado;
+	}
+
+	public void setEstado(String estado) {
+		this.estado = estado;
+	}
+
+	public Bandeja getBandeja() {
+		return bandeja;
+	}
+
+	public void setBandeja(Bandeja bandeja) {
+		this.bandeja = bandeja;
+	}
+
+	public TipoDocumento getTipoDocumento() {
+		return tipoDocumento;
+	}
+
+	public void setTipoDocumento(TipoDocumento tipoDocumento) {
+		this.tipoDocumento = tipoDocumento;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((bandeja == null) ? 0 : bandeja.hashCode());
+		result = prime * result
+				+ ((descripcion == null) ? 0 : descripcion.hashCode());
+		result = prime * result + Arrays.hashCode(docBlob);
+		result = prime * result + ((estado == null) ? 0 : estado.hashCode());
+		result = prime * result
+				+ ((fechaCreacion == null) ? 0 : fechaCreacion.hashCode());
+		result = prime * result
+				+ ((fechaEmision == null) ? 0 : fechaEmision.hashCode());
+		result = prime
+				* result
+				+ ((fechaModificacion == null) ? 0 : fechaModificacion
+						.hashCode());
+		result = prime * result
+				+ ((idDetalle == null) ? 0 : idDetalle.hashCode());
+		result = prime * result + ((nroDoc == null) ? 0 : nroDoc.hashCode());
+		result = prime * result
+				+ ((tipoDocumento == null) ? 0 : tipoDocumento.hashCode());
+		result = prime * result
+				+ ((urlDocumento == null) ? 0 : urlDocumento.hashCode());
+		result = prime * result
+				+ ((usuarioModifica == null) ? 0 : usuarioModifica.hashCode());
+		result = prime * result
+				+ ((usuarioRegistra == null) ? 0 : usuarioRegistra.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DetalleBandeja other = (DetalleBandeja) obj;
+		if (bandeja == null) {
+			if (other.bandeja != null)
+				return false;
+		} else if (!bandeja.equals(other.bandeja))
+			return false;
+		if (descripcion == null) {
+			if (other.descripcion != null)
+				return false;
+		} else if (!descripcion.equals(other.descripcion))
+			return false;
+		if (!Arrays.equals(docBlob, other.docBlob))
+			return false;
+		if (estado == null) {
+			if (other.estado != null)
+				return false;
+		} else if (!estado.equals(other.estado))
+			return false;
+		if (fechaCreacion == null) {
+			if (other.fechaCreacion != null)
+				return false;
+		} else if (!fechaCreacion.equals(other.fechaCreacion))
+			return false;
+		if (fechaEmision == null) {
+			if (other.fechaEmision != null)
+				return false;
+		} else if (!fechaEmision.equals(other.fechaEmision))
+			return false;
+		if (fechaModificacion == null) {
+			if (other.fechaModificacion != null)
+				return false;
+		} else if (!fechaModificacion.equals(other.fechaModificacion))
+			return false;
+		if (idDetalle == null) {
+			if (other.idDetalle != null)
+				return false;
+		} else if (!idDetalle.equals(other.idDetalle))
+			return false;
+		if (nroDoc == null) {
+			if (other.nroDoc != null)
+				return false;
+		} else if (!nroDoc.equals(other.nroDoc))
+			return false;
+		if (tipoDocumento == null) {
+			if (other.tipoDocumento != null)
+				return false;
+		} else if (!tipoDocumento.equals(other.tipoDocumento))
+			return false;
+		if (urlDocumento == null) {
+			if (other.urlDocumento != null)
+				return false;
+		} else if (!urlDocumento.equals(other.urlDocumento))
+			return false;
+		if (usuarioModifica == null) {
+			if (other.usuarioModifica != null)
+				return false;
+		} else if (!usuarioModifica.equals(other.usuarioModifica))
+			return false;
+		if (usuarioRegistra == null) {
+			if (other.usuarioRegistra != null)
+				return false;
+		} else if (!usuarioRegistra.equals(other.usuarioRegistra))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "DetalleBandeja [idDetalle=" + idDetalle + ", nroDoc=" + nroDoc
+				+ ", fechaEmision=" + fechaEmision + ", descripcion="
+				+ descripcion + ", urlDocumento=" + urlDocumento
+				+ ", usuarioRegistra=" + usuarioRegistra + ", usuarioModifica="
+				+ usuarioModifica + ", docBlob=" + Arrays.toString(docBlob)
+				+ ", fechaCreacion=" + fechaCreacion + ", fechaModificacion="
+				+ fechaModificacion + ", estado=" + estado + ", bandeja="
+				+ bandeja + ", tipoDocumento=" + tipoDocumento + "]";
+	}
+
+}

@@ -1,0 +1,238 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions">
+<h:head>
+	<h:outputStylesheet name="css/cssContent.css" />
+</h:head>
+<h:body>
+	<p:growl id="messages" showDetail="true" life="40000" />
+	<p:panel id="datos" header="Actividad/Compuerta">
+		<table cellspacing="2" cellpadding="2">
+			<tr>
+				<td>#{messages.lblProceso} <h:outputText value="*"
+						styleClass="obligatorio" /></td>
+				<td><p:selectOneMenu id="comboProceso"
+						value="#{reqActController.procesoSelec}" style=" width : 210px;">
+						<f:selectItems value="#{reqActController.comboProceso}" />
+						<p:ajax update="comboActividad,comboRol,dtList"
+							process="comboProceso" event="change"
+							actionListener="#{reqActController.comboActividad} #{reqActController.list}" />
+					</p:selectOneMenu></td>
+				<td>#{messages.lblActividad} <h:outputText value="*"
+						styleClass="obligatorio" /></td>
+				<td><p:selectOneMenu id="comboActividad"
+						value="#{reqActController.actividadSelec}" style=" width : 210px;">
+						<f:selectItems value="#{reqActController.comboActividad}" />
+						<p:ajax update="dtLista,comboRol,btnDes" process="comboActividad"
+							event="change"
+							actionListener="#{reqActController.listTipoDoc} #{reqActController.rolSelec}" />
+					</p:selectOneMenu></td>
+			</tr>
+			<tr>
+				<td>#{messages.lblRol} <h:outputText value="*"
+						styleClass="obligatorio" /></td>
+				<td><p:selectOneMenu id="comboRol"
+						value="#{reqActController.rolSelec}" style=" width : 210px;">
+						<f:selectItems value="#{reqActController.comboRol}" />
+					</p:selectOneMenu></td>
+				<td><h:outputText value="Descripción Act." /></td>
+				<td><p:commandButton id="btnDes" value="Descripción"
+						icon="ui-icon-newwin"
+						actionListener="#{reqActController.buscarActividad}"
+						disabled="#{reqActController.swBtnDesc}"
+						update="dlgDescripcion,btnDes" oncomplete="dlgDesc.show()"
+						title="Ver descripción de la actividad" /> <pe:tooltip
+						for="btnDes" value="Ver descripción de la actividad"
+						showEffect="fadeIn" hideEffect="fadeIn" myPosition="left center"
+						atPosition="right center" /></td>
+				<pe:tooltip for="btnDes" value="Ver descripción de la actividad"
+					showEffect="fadeIn" hideEffect="fadeIn" myPosition="left center"
+					atPosition="right center" />
+			</tr>
+			<tr>
+				<td>#{messages.lblTipoDoc}</td>
+				<td><p:selectOneMenu id="tipoDoc"
+						value="#{reqActController.tipoDocSelec}" style=" width : 210px;">
+						<f:selectItems value="#{reqActController.comboTipoDoc}" />
+					</p:selectOneMenu></td>
+				<td><p:commandButton id="btnAgregarTipDoc"
+						value="#{messages.btnAgregar}" icon="ui-icon-plus"
+						action="#{reqActController.agregar}"
+						update="dtLista, :frm:messages,tipoDoc,btnAgregarTipDoc"
+						title="Agregar tipo de documento" /> <pe:tooltip
+						for="btnAgregarTipDoc" value="Agregar tipo de documento"
+						showEffect="fadeIn" hideEffect="fadeIn" myPosition="left center"
+						atPosition="right center" /></td>
+
+			</tr>
+		</table>
+		<p:dataTable var="doc" value="#{reqActController.listTipoDoc}"
+			id="dtLista" scrollable="true" scrollHeight="70" rows="5"
+			emptyMessage="#{messages.msgEmptyMessage}">
+			<f:facet name="header">  
+            #{messages.lblListTipoDoc} 
+        </f:facet>
+
+			<p:column headerText="#{messages.lblCodigo}" style="width:20%">
+				<h:outputText value="#{doc.tipoDocumento.idTipoDocumento}" />
+			</p:column>
+			<p:column headerText="#{messages.lblDenominacion}" style="width:50%">
+				<h:outputText value="#{doc.tipoDocumento.nombre}" />
+			</p:column>
+			<p:column headerText="#{messages.lblOpciones}" style="width:20%">
+				<p:commandButton value="" update="dtLista"
+					icon="ui-icon ui-icon-trash" onclick="confirmation.show()"
+					title="Eliminar tipo de documento">
+					<f:setPropertyActionListener value="#{doc}"
+						target="#{reqActController.detalleSelec}" />
+				</p:commandButton>
+			</p:column>
+		</p:dataTable>
+
+		<p:separator id="separator1" />
+		<table>
+			<tr>
+				<td><p:commandButton value="#{messages.btnGuardar}"
+						action="#{reqActController.guardar}"
+						update="datos,dtList,messages" icon="ui-icon-disk" /></td>
+				<td><p:commandButton value="#{messages.btnCancelar}"
+						action="#{reqActController.limpiar}" update="datos"
+						icon="ui-icon-close" /></td>
+			</tr>
+		</table>
+		<p:separator id="separator2" />
+		<p:dataTable var="detalle" value="#{reqActController.list}"
+			id="dtList" scrollable="true" scrollHeight="110" paginator="true"
+			rows="5"
+			paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			rowsPerPageTemplate="5,10,15"
+			emptyMessage="#{messages.msgEmptyMessage}">
+
+			<f:facet name="header">  
+             #{messages.lblListActComp }
+        </f:facet>
+
+			<p:column headerText="#{messages.lblCodigo}" style="width:5%">
+				<h:outputText value="#{detalle.id.idActividad}"
+					sortBy="#{detalle.id.idActividad}" />
+			</p:column>
+			<p:column headerText="#{messages.lblActComp}" style="width:35%">
+				<h:outputText value="#{detalle.nombre}" sortBy="#{detalle.nombre}" />
+			</p:column>
+			<p:column headerText="#{messages.lblProceso}" style="width:30%">
+				<h:outputText value="#{detalle.proceso.nombre}"
+					sortBy="#{detalle.proceso.nombre}" />
+			</p:column>
+			<p:column headerText="#{messages.lblRol}" style="width:15%">
+				<h:outputText value="#{detalle.rol.nombre}"
+					sortBy="#{detalle.rol.nombre}" />
+			</p:column>
+			<p:column headerText="#{messages.lblTipo}" style="width:8%">
+				<h:outputText
+					value="#{detalle.tipo.equals('A')?'Actividad':'Compuerta'}"
+					sortBy="#{detalle.tipo}" />
+			</p:column>
+			<p:column headerText="#{messages.lblOpciones}" style="width:8%">
+				<p:commandButton value="" icon="ui-icon-document"
+					action="#{reqActController.editSelec}" title="Ver detalles"
+					update=":frm:pnlEdit, :frm:dtListaM" oncomplete="editDialog.show()">
+					<f:setPropertyActionListener value="#{detalle}"
+						target="#{reqActController.modifica}" />
+					<f:setPropertyActionListener value="#{detalle.rol.idRol}"
+						target="#{reqActController.rolSelecM}" />
+				</p:commandButton>
+			</p:column>
+		</p:dataTable>
+
+	</p:panel>
+
+	<p:dialog id="dlgEdit" header="Detalle Actividad/Compuerta"
+		widgetVar="editDialog" modal="true" resizable="false" width="400"
+		showEffect="clip" closable="true" hideEffect="fold">
+
+		<p:panel id="pnlEdit">
+			<table cellpadding="2" cellspacing="4">
+				<tr>
+					<td><h:outputText value="#{messages.lblCodigo}"
+							style="font-weight:bold;" /></td>
+					<td><h:outputText
+							value="#{reqActController.modifica.id.idActividad}" /></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="#{messages.lblActividad}"
+							style="font-weight:bold;" /></td>
+					<td><h:outputText value="#{reqActController.modifica.nombre}"
+							maxlength="60" style=" width : 180px;" tabindex="1" /></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="#{messages.lblTipo}"
+							style="font-weight:bold;" /></td>
+					<td><h:outputText
+							value=" #{reqActController.modifica.tipo.equals('A')?'Actividad':'Compuerta'} "
+							maxlength="60" style=" width : 180px;" tabindex="2" /></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="#{messages.lblRol}"
+							style="font-weight:bold;" /></td>
+					<td><h:outputText
+							value="#{reqActController.modifica.rol.nombre}" maxlength="60"
+							style=" width : 180px;" tabindex="1" /></td>
+				</tr>
+			</table>
+			<p:dataTable var="detalle" value="#{reqActController.listTipoDocM}"
+				id="dtListaM" scrollable="true" scrollHeight="70" rows="5"
+				emptyMessage="#{messages.msgEmptyMessage}">
+				<f:facet name="header">  
+                Lista de Doc. Requeridos
+                </f:facet>
+				<p:column headerText="#{messages.lblCodigo}" style="width:20%">
+					<h:outputText value="#{detalle.tipoDocumento.idTipoDocumento}" />
+				</p:column>
+				<p:column headerText="#{messages.lblNombre}" style="width:80%">
+					<h:outputText value="#{detalle.tipoDocumento.nombre}" />
+				</p:column>
+			</p:dataTable>
+		</p:panel>
+	</p:dialog>
+
+	<p:confirmDialog id="confirmDialog"
+		message="#{messages.msgDocumentoEliminar}"
+		header="#{messages.lblDocumentoEliminar}" severity="alert"
+		widgetVar="confirmation">
+
+		<p:commandButton id="confirm" value="Si" update=":frm:dtLista"
+			oncomplete="confirmation.hide()"
+			actionListener="#{reqActController.eliminarDoc()}" />
+		<p:commandButton id="decline" value="No" onclick="confirmation.hide()"
+			type="button" />
+	</p:confirmDialog>
+
+	<!--      Dialog para agregar descripcion -->
+	<p:dialog id="dlgDescripcion"
+		header="Escriba la descripción para la Actividad/Compuerta seleccionada"
+		widgetVar="dlgDesc" modal="true" resizable="false" showEffect="clip"
+		closable="true" hideEffect="fold">
+		<p:panelGrid id="pnlDescripcion" styleClass="panelGrid">
+			<p:focus context="pnlDescripcion" />
+			<p:row>
+				<p:column>
+					<p:inputTextarea value="#{reqActController.actSelec2.descripcion}"
+						rows="6" cols="60" autoResize="false" maxlength="3800"
+						tabindex="1" />
+				</p:column>
+			</p:row>
+		</p:panelGrid>
+		<f:facet name="footer">
+			<p:commandButton value="Guardar" update="pnlDescripcion,messages"
+				id="btnGuardarDes" action="#{reqActController.guardarDescripcion}"
+				icon="ui-icon-disk" oncomplete="dlgDesc.hide()" />
+		</f:facet>
+	</p:dialog>
+
+</h:body>
+</html>

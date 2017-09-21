@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence
+      http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd"
+	version="1.0">
+	<persistence-unit name="acme" transaction-type="RESOURCE_LOCAL">
+		<!-- -->
+		<jta-data-source>java:jboss/datasources/Workflow</jta-data-source>
+		<class>gob.servir.workflow.model.Actividad</class>
+		<class>gob.servir.workflow.model.ActividadPK</class>
+		<class>gob.servir.workflow.model.Bandeja</class>
+		<class>gob.servir.workflow.model.BandejaPK</class>
+		<class>gob.servir.workflow.model.DetalleActividad</class>
+		<class>gob.servir.workflow.model.Documento</class>
+		<class>gob.servir.workflow.model.EntidadDestino</class>
+		<class>gob.servir.workflow.model.Flujo</class>
+		<class>gob.servir.workflow.model.GerentePublico</class>
+		<class>gob.servir.workflow.model.ItemMenu</class>
+		<class>gob.servir.workflow.model.Menu</class>
+		<class>gob.servir.workflow.model.Permiso</class>
+		<class>gob.servir.workflow.model.Proceso</class>
+		<class>gob.servir.workflow.model.PuestoTipo</class>
+		<class>gob.servir.workflow.model.Rol</class>
+<!-- 		<class>gob.servir.workflow.model.Task</class> -->
+		<class>gob.servir.workflow.model.TipoDocumento</class>
+		<class>gob.servir.workflow.model.Usuario</class>
+
+		<properties>
+			<!-- crea las tablas inicial -->
+			<property name="hibernate.hbm2ddl.auto" value="create-drop" />
+
+			<!-- actualizar las tablas: <property name="hibernate.hbm2ddl.auto" value="update" 
+				/> -->
+			<!-- drop-and-create-tables ° create-drop -->
+			<property name="hibernate.show_sql" value="true" />
+			<property name="hibernate.transaction.flush_before_completion"
+				value="true" />
+			<property name="hibernate.cache.provider_class" value="org.hibernate.cache.HashtableCacheProvider" />
+		</properties>
+	</persistence-unit>
+
+</persistence>

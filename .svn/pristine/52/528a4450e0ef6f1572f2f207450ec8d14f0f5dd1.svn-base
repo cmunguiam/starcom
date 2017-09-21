@@ -1,0 +1,57 @@
+package gob.servir.workflow.dao;
+
+import gob.servir.workflow.model.Bandeja;
+import gob.servir.workflow.model.BandejaPK;
+import gob.servir.workflow.model.Documento;
+
+import java.util.List;
+
+/**
+ * 
+ * @author Hever Pumallihua
+ */
+public interface BandejaDao {
+
+	public abstract Bandeja find(BandejaPK id);
+
+	public abstract Bandeja save(Bandeja obj);
+
+	public abstract Long getMaxCorrelativoBandeja();
+
+	public abstract boolean atenderFlujo(Bandeja bandeja,
+			List<Documento> listaDetalle);
+
+	public abstract boolean atenderActividad(Bandeja bandeja);
+
+	public abstract boolean concluirFlujo(Bandeja bandeja);
+
+	public abstract List<Bandeja> getListaBandeja();
+
+	public abstract List<Bandeja> getListaBandeja(Long idFlujo);
+
+	public abstract boolean atenderCompuertaParalela(Bandeja bandeja, int opcion);
+
+	public abstract boolean atenderCompuertaInclusiva(Bandeja bandeja,
+			String opcionComp);
+
+	public abstract boolean atenderCompuertaExclusiva(Bandeja bandeja,
+			String opcionComp);
+
+	public abstract boolean atenderActividadNro12(Bandeja bandeja);
+
+	public abstract boolean atenderActividadNro27y30(Bandeja bandeja,
+			Long paramIdActividad);
+
+	public abstract Bandeja getBandeja(Long idFlujo, Long idProceso,
+			Long idActividad);
+
+	public abstract int getTotalManufacturers(Long idFlujo);
+
+	public abstract List<Bandeja> getFindManufacturers(final int firstRow,
+			final int max, Long idFlujo);
+
+	public abstract Bandeja getBandejaDetalle(BandejaPK id);
+	
+	public abstract Bandeja getBandejaPendiente(Long idFlujo, Long idProceso);
+
+}

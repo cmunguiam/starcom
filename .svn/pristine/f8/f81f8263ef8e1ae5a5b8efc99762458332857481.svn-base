@@ -1,0 +1,421 @@
+package gob.servir.workflow.controller;
+
+import gob.servir.workflow.dao.EntidadDestinoDao;
+import gob.servir.workflow.dao.FlujoDao;
+import gob.servir.workflow.dao.GerentePublicoDao;
+import gob.servir.workflow.dao.PuestoTipoDao;
+import gob.servir.workflow.model.EntidadDestino;
+import gob.servir.workflow.model.Flujo;
+import gob.servir.workflow.model.GerentePublico;
+import gob.servir.workflow.model.PuestoTipo;
+import gob.servir.workflow.model.Usuario;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component("terminarFlujoController")
+@Scope("session")
+public class TerminarFlujoController implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(TerminarFlujoController.class);
+
+	@Autowired
+	private PuestoTipoDao puestoDao;
+	private List<SelectItem> comboPuesto = new ArrayList<SelectItem>();
+	private Long puestoSelec = 0L;
+	private PuestoTipo puestoTipoSelect = null;
+
+	@Autowired
+	private EntidadDestinoDao entidadDestinoDao;
+	private List<EntidadDestino> listaEntidadTipo = new ArrayList<EntidadDestino>();
+	private Long entidadDestinoSelec = 0L;
+	private EntidadDestino entidadDestinoSelect = new EntidadDestino();
+	private EntidadDestino entidadDestinoSelect2 = new EntidadDestino();
+	private String entidadBusc = "";
+	private String entidadBusc2 = "";
+
+	@Autowired
+	private GerentePublicoDao gerentePublicoDao;
+	private List<GerentePublico> listaGerentePublico = new ArrayList<GerentePublico>();
+	private GerentePublico gerentePublicoSelect = new GerentePublico();
+	private GerentePublico gerentePublicoSelect2 = new GerentePublico();
+	private String gerenteBusc = "";
+	private String gerenteBusc2 = "0";
+
+	@Autowired
+	private FlujoDao flujoDao;
+	private Long idFlujo = null;
+	private Flujo nuevoFlujo = new Flujo();
+	private Flujo nuevoFlujoEditar = new Flujo();
+	private Boolean flujobu = true;
+	private Boolean flujoEstado = true;
+	private Boolean textComentario = true;
+
+	private List<Flujo> listaFlujo = new ArrayList<Flujo>();
+
+	private Usuario userSesion = null;
+
+	public TerminarFlujoController() {
+
+	}
+
+	public GerentePublico getGerentePublicoSelect2() {
+		return gerentePublicoSelect2;
+	}
+
+	public void setGerentePublicoSelect2(GerentePublico gerentePublicoSelect2) {
+		this.gerentePublicoSelect2 = gerentePublicoSelect2;
+	}
+
+	public EntidadDestino getEntidadDestinoSelect2() {
+		return entidadDestinoSelect2;
+	}
+
+	public void setEntidadDestinoSelect2(EntidadDestino entidadDestinoSelect2) {
+		this.entidadDestinoSelect2 = entidadDestinoSelect2;
+	}
+
+	public Boolean getTextComentario() {
+		return textComentario;
+	}
+
+	public void setTextComentario(Boolean textComentario) {
+		this.textComentario = textComentario;
+	}
+
+	public String getGerenteBusc2() {
+		return gerenteBusc2;
+	}
+
+	public void setGerenteBusc2(String gerenteBusc2) {
+		this.gerenteBusc2 = gerenteBusc2;
+	}
+
+	public String getGerenteBusc() {
+		return gerenteBusc;
+	}
+
+	public String getEntidadBusc2() {
+		return entidadBusc2;
+	}
+
+	public void setEntidadBusc2(String entidadBusc2) {
+		this.entidadBusc2 = entidadBusc2;
+	}
+
+	public void setGerenteBusc(String gerenteBusc) {
+		this.gerenteBusc = gerenteBusc;
+	}
+
+	public Boolean getFlujoEstado() {
+		return flujoEstado;
+	}
+
+	public void setFlujoEstado(Boolean flujoEstado) {
+		this.flujoEstado = flujoEstado;
+	}
+
+	public Boolean getFlujobu() {
+		return flujobu;
+	}
+
+	public void setFlujobu(Boolean flujobu) {
+		this.flujobu = flujobu;
+	}
+
+	public PuestoTipo getPuestoTipoSelect() {
+		return puestoTipoSelect;
+	}
+
+	public void setPuestoTipoSelect(PuestoTipo puestoTipoSelect) {
+		this.puestoTipoSelect = puestoTipoSelect;
+	}
+
+	public Long getIdFlujo() {
+
+		return idFlujo;
+	}
+
+	public void setIdFlujo(Long idFlujo) {
+		this.idFlujo = idFlujo;
+	}
+
+	public Flujo getNuevoFlujo() {
+		return nuevoFlujo;
+	}
+
+	public void setNuevoFlujo(Flujo nuevoFlujo) {
+		this.nuevoFlujo = nuevoFlujo;
+	}
+
+	public Flujo getNuevoFlujoEditar() {
+		return nuevoFlujoEditar;
+	}
+
+	public void setNuevoFlujoEditar(Flujo nuevoFlujoEditar) {
+		this.nuevoFlujoEditar = nuevoFlujoEditar;
+	}
+
+	public List<Flujo> getListaFlujo() {
+		if (flujobu) {
+			listaFlujo = flujoDao.getListaFlujo();
+			flujobu = true;
+		}
+
+		return listaFlujo;
+	}
+
+	public void setListaFlujo(List<Flujo> listaFlujo) {
+		this.listaFlujo = listaFlujo;
+	}
+
+	public String getEntidadBusc() {
+		return entidadBusc;
+	}
+
+	public void setEntidadBusc(String entidadBusc) {
+		this.entidadBusc = entidadBusc;
+	}
+
+	public GerentePublico getGerentePublicoSelect() {
+		return gerentePublicoSelect;
+	}
+
+	public void setGerentePublicoSelect(GerentePublico gerentePublicoSelect) {
+		this.gerentePublicoSelect = gerentePublicoSelect;
+	}
+
+	public EntidadDestino getEntidadDestinoSelect() {
+		return entidadDestinoSelect;
+	}
+
+	public void setEntidadDestinoSelect(EntidadDestino entidadDestinoSelect) {
+		this.entidadDestinoSelect = entidadDestinoSelect;
+	}
+
+	public Long getEntidadDestinoSelec() {
+		return entidadDestinoSelec;
+	}
+
+	public void setEntidadDestinoSelec(Long entidadDestinoSelec) {
+		this.entidadDestinoSelec = entidadDestinoSelec;
+	}
+
+	public Long getPuestoSelec() {
+		return puestoSelec;
+	}
+
+	public void setPuestoSelec(Long puestoSelec) {
+		this.puestoSelec = puestoSelec;
+	}
+
+	public List<SelectItem> getComboPuesto() {
+		comboPuesto = puestoDao.getComboPuesto();
+		return comboPuesto;
+	}
+
+	public void setComboPuesto(List<SelectItem> comboPuesto) {
+		this.comboPuesto = comboPuesto;
+	}
+
+	public List<EntidadDestino> getListaEntidadTipo() {
+		if (entidadBusc.equalsIgnoreCase(""))
+			listaEntidadTipo = entidadDestinoDao.getListaEntidad();
+		return listaEntidadTipo;
+
+	}
+
+	public void setListaEntidadTipo(List<EntidadDestino> listaEntidadTipo) {
+
+		this.listaEntidadTipo = listaEntidadTipo;
+	}
+
+	public List<GerentePublico> getListaGerentePublico() {
+
+		if (gerenteBusc.equalsIgnoreCase(""))
+			listaGerentePublico = gerentePublicoDao.getListaGerentePublico();
+		return listaGerentePublico;
+	}
+
+	public void setListaGerentePublico(List<GerentePublico> listaGerentePublico) {
+		this.listaGerentePublico = listaGerentePublico;
+	}
+
+	public void limpiar() {
+
+		nuevoFlujo = new Flujo();
+		puestoSelec = 0L;
+		entidadDestinoSelec = 0L;
+		gerentePublicoSelect = null;
+		gerentePublicoSelect2 = null;
+		entidadDestinoSelect = null;
+		entidadDestinoSelect2 = null;
+		gerenteBusc = "";
+		idFlujo = null;
+		nuevoFlujoEditar = null;
+		entidadBusc2 = "0";
+		entidadBusc = "";
+		gerenteBusc2 = "";
+		textComentario = true;
+
+		listaFlujo = flujoDao.getListaFlujo();
+	}
+
+	public boolean validarDatos() {
+
+		if (puestoSelec == 0L) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN,
+							"Es necesario", "Seleccione Puesto"));
+			return false;
+		}
+
+		return true;
+
+	}
+
+	public void validarSesion() {
+		FacesContext context = FacesContext.getCurrentInstance();
+		userSesion = (Usuario) context.getExternalContext().getSessionMap()
+				.get("userSesion");
+
+		if (userSesion == null) {
+			String ctxPath = context.getExternalContext()
+					.getRequestContextPath();
+			try {
+				context.getExternalContext().redirect(ctxPath + "/login.jsf");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void buscarDatos() {
+
+		if (entidadDestinoSelect2 == null)
+			entidadDestinoSelec = 0L;
+		else
+			entidadDestinoSelec = entidadDestinoSelect2.getId_ed() == null ? 0L
+					: entidadDestinoSelect2.getId_ed();
+		if (gerentePublicoSelect2 == null)
+			entidadBusc2 = "0";
+		else
+			entidadBusc2 = gerentePublicoSelect2.getCod_gerente() == null ? "0"
+					: gerentePublicoSelect2.getCod_gerente();
+		if (idFlujo == null)
+			idFlujo = 0L;
+
+		flujobu = false;
+		listaFlujo = flujoDao.getListaFlujo(idFlujo, puestoSelec, entidadBusc2,
+				entidadDestinoSelec);
+
+		if (idFlujo == 0L)
+			idFlujo = null;
+
+	}
+
+	public void terminarFlujo() {
+		validarSesion();
+		try {
+
+			if (idFlujo > 0) {
+
+				nuevoFlujoEditar.setEstado("C");
+				nuevoFlujoEditar.setFechaModificacion(new Date());
+				nuevoFlujoEditar.setUsuarioModifica(userSesion.getUsuario());
+				flujoDao.update(nuevoFlujoEditar);
+				flujoEstado = true;
+				textComentario = true;
+
+				FacesContext.getCurrentInstance().addMessage(
+						null,
+						new FacesMessage(FacesMessage.SEVERITY_INFO, "EXITO",
+								"Flujo Terminado"));
+				limpiar();
+
+			} else {
+				FacesContext.getCurrentInstance().addMessage(
+						null,
+						new FacesMessage(FacesMessage.SEVERITY_WARN,
+								"ADVERTENCIA", "Elija Flujo a Terminar"));
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, "ERROR",
+							"Al Guardar Flujo"));
+		}
+
+	}
+
+	public void buscarEntidad() {
+		gerenteBusc = "";
+		try {
+
+			entidadDestinoSelect = entidadDestinoDao.find(nuevoFlujoEditar
+					.getEntidadDestino().getId_ed());
+			setEntidadBusc(entidadDestinoSelect.getDesc_ed());
+			if (nuevoFlujoEditar.getGerentePublico() != null) {
+
+				gerentePublicoSelect = gerentePublicoDao.find(nuevoFlujoEditar
+						.getGerentePublico().getCod_gerente());
+				setGerenteBusc(gerentePublicoSelect.getNombres());
+			}
+
+			if (!(nuevoFlujoEditar.getEstado()).equalsIgnoreCase("AT")
+					|| !(nuevoFlujoEditar.getEstado()).equalsIgnoreCase("C")) {
+				flujoEstado = false;
+				textComentario = false;
+			} else {
+				flujoEstado = true;
+				textComentario = true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public void buscarEntidadBtn() {
+
+		try {
+
+			listaEntidadTipo = entidadDestinoDao.buscarNombre(entidadBusc);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void buscarGerente() {
+		try {
+
+			listaGerentePublico = gerentePublicoDao
+					.buscarNombreDni(gerenteBusc);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+
+		}
+	}
+
+}

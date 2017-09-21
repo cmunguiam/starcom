@@ -1,0 +1,141 @@
+package gob.servir.workflow.model;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
+/**
+ * 
+ * @author Hever Pumallihua
+ */
+@Entity
+public class GerentePublico implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+	@Id
+	private String cod_gerente;
+	@Column
+	private String nombres;
+	@Column
+	private String ap_paterno;
+	@Column
+	private String ap_materno;
+	@Column
+	private String dni;
+
+	public GerentePublico() {
+		super();
+	}
+
+	public String getCod_gerente() {
+		return cod_gerente;
+	}
+
+	public void setCod_gerente(String cod_gerente) {
+		this.cod_gerente = cod_gerente;
+	}
+
+	public String getNombres() {
+		return nombres;
+	}
+
+	public void setNombres(String nombres) {
+		this.nombres = nombres;
+	}
+
+	public String getDni() {
+		return dni;
+	}
+
+	public void setDni(String dni) {
+		this.dni = dni;
+	}
+
+	public String getAp_paterno() {
+		return ap_paterno;
+	}
+
+	public void setAp_paterno(String ap_paterno) {
+		this.ap_paterno = ap_paterno;
+	}
+
+	public String getAp_materno() {
+		return ap_materno;
+	}
+
+	public void setAp_materno(String ap_materno) {
+		this.ap_materno = ap_materno;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((ap_materno == null) ? 0 : ap_materno.hashCode());
+		result = prime * result
+				+ ((ap_paterno == null) ? 0 : ap_paterno.hashCode());
+		result = prime * result
+				+ ((cod_gerente == null) ? 0 : cod_gerente.hashCode());
+		result = prime * result + ((dni == null) ? 0 : dni.hashCode());
+		result = prime * result + ((nombres == null) ? 0 : nombres.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		GerentePublico other = (GerentePublico) obj;
+		if (ap_materno == null) {
+			if (other.ap_materno != null)
+				return false;
+		} else if (!ap_materno.equals(other.ap_materno))
+			return false;
+		if (ap_paterno == null) {
+			if (other.ap_paterno != null)
+				return false;
+		} else if (!ap_paterno.equals(other.ap_paterno))
+			return false;
+		if (cod_gerente == null) {
+			if (other.cod_gerente != null)
+				return false;
+		} else if (!cod_gerente.equals(other.cod_gerente))
+			return false;
+		if (dni == null) {
+			if (other.dni != null)
+				return false;
+		} else if (!dni.equals(other.dni))
+			return false;
+		if (nombres == null) {
+			if (other.nombres != null)
+				return false;
+		} else if (!nombres.equals(other.nombres))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("GerentePublico [cod_gerente=");
+		builder.append(cod_gerente);
+		builder.append(", nombres=");
+		builder.append(nombres);
+		builder.append(", ap_paterno=");
+		builder.append(ap_paterno);
+		builder.append(", ap_materno=");
+		builder.append(ap_materno);
+		builder.append(", dni=");
+		builder.append(dni);
+		builder.append("]");
+		return builder.toString();
+	}
+
+}

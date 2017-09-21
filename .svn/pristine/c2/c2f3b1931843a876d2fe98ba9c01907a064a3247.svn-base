@@ -1,0 +1,95 @@
+package gob.servir.workflow.daoImpl;
+
+import gob.servir.workflow.dao.DetalleBandejaDao;
+import gob.servir.workflow.model.BandejaPK;
+import gob.servir.workflow.model.Documento;
+
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+@Repository
+public class DetalleBandejaDaoImpl implements DetalleBandejaDao {
+	@PersistenceContext
+	private EntityManager em;
+
+	public Documento find(Long id) {
+		return em.find(Documento.class, id);
+	}
+
+	@Transactional
+	public Documento save(Documento obj) {
+		if (obj.getIdDetalle() == null) {
+			em.persist(obj);
+			return obj;
+		} else {
+			return em.merge(obj);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Documento> getListaDetalleBandeja() {
+		Query q = (Query) em
+				.createQuery("select d from DetalleBandeja d where d.estado =:estado");
+		q.setParameter("estado", "A");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA DETALLE BANDEJA VACIO");
+			return null;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Documento> getListaDetalleBandeja(BandejaPK id) {
+		Query q = (Query) em
+				.createQuery("select d from DetalleBandeja d where d.bandeja.bandejaPK.idFlujo =:idFlujo and d.bandeja.bandejaPK.idActividad =:idActividad and d.bandeja.bandejaPK.idProceso =:idProceso and d.estado =:estado");
+		q.setParameter("idFlujo", id.getIdFlujo());
+		q.setParameter("idActividad", id.getIdActividad());
+		q.setParameter("idProceso", id.getIdProceso());
+		q.setParameter("estado", "A");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA DETALLE BANDEJA VACIO");
+			return null;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Documento> getListaValidarNroDoc(BandejaPK id, String nroDoc) {
+		Query q = (Query) em
+				.createQuery("select d from DetalleBandeja d where d.bandeja.bandejaPK.idFlujo =:idFlujo and d.bandeja.bandejaPK.idActividad =:idActividad and d.bandeja.bandejaPK.idProceso =:idProceso and d.nroDoc =:nroDoc and d.estado =:estado");
+		q.setParameter("idFlujo", id.getIdFlujo());
+		q.setParameter("idActividad", id.getIdActividad());
+		q.setParameter("idProceso", id.getIdProceso());
+		q.setParameter("nroDoc", nroDoc);
+		q.setParameter("estado", "A");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA DETALLE BANDEJA VACIO");
+			return null;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Documento> getListFlujo(Long idFlujo) {
+		Query q = (Query) em
+				.createQuery("select r from DetalleBandeja r where r.estado =:estado and r.bandeja.bandejaPK.idFlujo =:idFlujo");
+		q.setParameter("estado", "A");
+		q.setParameter("idFlujo", idFlujo);
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			as.printStackTrace();
+			return null;
+		}
+	}
+
+}

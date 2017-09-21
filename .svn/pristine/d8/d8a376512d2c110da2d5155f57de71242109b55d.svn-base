@@ -1,0 +1,593 @@
+package gob.servir.workflow.controller;
+
+import gob.servir.workflow.dao.ActividadDao;
+import gob.servir.workflow.dao.DetalleActividadDao;
+import gob.servir.workflow.dao.ProcesoDao;
+import gob.servir.workflow.dao.RolDao;
+import gob.servir.workflow.dao.TipoDocumentoDao;
+import gob.servir.workflow.dao.UsuarioDao;
+import gob.servir.workflow.model.Actividad;
+import gob.servir.workflow.model.ActividadPK;
+import gob.servir.workflow.model.DetalleActividad;
+import gob.servir.workflow.model.TipoDocumento;
+import gob.servir.workflow.model.Usuario;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.ResourceBundle;
+
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component("reqActController")
+@Scope("session")
+public class RequerimientoActividadController {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(RequerimientoActividadController.class);
+	
+	@Autowired
+	private LoginController loginController;
+	@Autowired
+	private UsuarioDao usuarioDao;
+	@Autowired
+	private RolDao rolDao;
+	@Autowired
+	private ProcesoDao procesoDao;
+	@Autowired
+	private ActividadDao actividadDao;
+	@Autowired
+	private TipoDocumentoDao tipoDocDao;
+	@Autowired
+	private DetalleActividadDao detalleDao;
+
+	private Actividad nuevo = new Actividad();
+	private Actividad modifica = new Actividad();
+	private Actividad actSelec = null;
+	private Actividad actSelec2 = new Actividad();
+	private DetalleActividad detalleSelec = null;
+
+	private List<Actividad> list = null;
+	private List<DetalleActividad> listTipoDoc = new ArrayList<DetalleActividad>();
+	private List<DetalleActividad> listTipoDocM = new ArrayList<DetalleActividad>();
+	private List<SelectItem> comboRol = new ArrayList<SelectItem>();
+	private List<SelectItem> comboEstado = new ArrayList<SelectItem>();
+	private List<SelectItem> comboProceso = new ArrayList<SelectItem>();
+	private List<SelectItem> comboActividad = new ArrayList<SelectItem>();
+	private List<SelectItem> comboTipoDoc = new ArrayList<SelectItem>();
+	private List<SelectItem> comboReqDoc = new ArrayList<SelectItem>();
+	private Long rolSelec = 0L;
+	private Long procesoSelec = 0L;
+	private Long actividadSelec = 0L;
+	private Long tipoDocSelec = 0L;
+	private Long rolSelecM = 0L;
+	// private String opcionDoc = "2";
+	// private boolean estado = true;
+
+	private Usuario userSesion = null;
+	private ResourceBundle bundle = null;
+	private FacesContext context = null;
+	private boolean swBtnDesc = true;
+
+	public RequerimientoActividadController() {
+
+	}
+
+	public List<DetalleActividad> getListTipoDocM() {
+		if (modifica.getId() != null) {
+			listTipoDocM = detalleDao
+					.getListaDetalleActividad(modifica.getId());
+		}
+		return listTipoDocM;
+	}
+
+	public void setListTipoDocM(List<DetalleActividad> listTipoDocM) {
+		this.listTipoDocM = listTipoDocM;
+	}
+
+	public Long getRolSelecM() {
+		return rolSelecM;
+	}
+
+	public void setRolSelecM(Long rolSelecM) {
+		this.rolSelecM = rolSelecM;
+	}
+
+
+	public void setComboReqDoc(List<SelectItem> comboReqDoc) {
+		this.comboReqDoc = comboReqDoc;
+	}	
+
+	public List<DetalleActividad> getListTipoDoc() {
+		listTipoDoc = new ArrayList<DetalleActividad>();
+		try {
+			if (procesoSelec != 0L && actividadSelec != 0L) {
+				ActividadPK id = new ActividadPK(actividadSelec, procesoSelec);
+				listTipoDoc = detalleDao.getListaDetalleActividad(id);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return listTipoDoc;
+	}
+
+	public void setListTipoDoc(List<DetalleActividad> listTipoDoc) {
+		this.listTipoDoc = listTipoDoc;
+	}
+
+	public DetalleActividad getDetalleSelec() {
+		return detalleSelec;
+	}
+
+	public void setDetalleSelec(DetalleActividad detalleSelec) {
+		this.detalleSelec = detalleSelec;
+	}
+
+	public List<SelectItem> getComboTipoDoc() {
+		comboTipoDoc = tipoDocDao.getComboTipoDocumento();
+		return comboTipoDoc;
+	}
+
+	public void setComboTipoDoc(List<SelectItem> comboTipoDoc) {
+		this.comboTipoDoc = comboTipoDoc;
+	}
+
+	public Long getTipoDocSelec() {
+		return tipoDocSelec;
+	}
+
+	public void setTipoDocSelec(Long tipoDocSelec) {
+		this.tipoDocSelec = tipoDocSelec;
+	}
+
+
+	public List<SelectItem> getComboActividad() {
+
+		comboActividad = new ArrayList<SelectItem>();
+
+		comboActividad = actividadDao.getComboActividad(procesoSelec);
+
+		return comboActividad;
+	}
+
+	public void setComboActividad(List<SelectItem> comboActividad) {
+		this.comboActividad = comboActividad;
+	}
+
+	public Long getActividadSelec() {
+		return actividadSelec;
+	}
+
+	public void setActividadSelec(Long actividadSelec) {
+		this.actividadSelec = actividadSelec;
+	}
+
+	public Long getProcesoSelec() {
+		return procesoSelec;
+	}
+
+	public void setProcesoSelec(Long procesoSelec) {
+		this.procesoSelec = procesoSelec;
+	}
+
+	public List<SelectItem> getComboProceso() {
+		comboProceso = procesoDao.getComboProceso();
+		return comboProceso;
+	}
+
+	public void setComboProceso(List<SelectItem> comboProceso) {
+		this.comboProceso = comboProceso;
+	}
+
+	public Long getRolSelec() {
+		Actividad act = null;
+		rolSelec = 0L;
+		try {
+			if (procesoSelec != 0L && actividadSelec != 0L) {
+				ActividadPK id = new ActividadPK(actividadSelec, procesoSelec);
+				act = actividadDao.find(id);
+
+				if (act.getRol().getIdRol() != null) {
+					rolSelec = act.getRol().getIdRol();
+				} else {
+					rolSelec = 0L;
+				}
+				act = null;
+				id = null;
+			} else {
+				rolSelec = 0L;
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return rolSelec;
+	}
+
+	public void setRolSelec(Long rolSelec) {
+		this.rolSelec = rolSelec;
+	}
+
+	public Actividad getModifica() {
+		return modifica;
+	}
+
+	public void setModifica(Actividad modifica) {
+		this.modifica = modifica;
+	}
+
+	public Actividad getNuevo() {
+		return nuevo;
+	}
+
+	public void setNuevo(Actividad nuevo) {
+		this.nuevo = nuevo;
+	}
+
+	public Actividad getActSelec() {
+		return actSelec;
+	}
+
+	public void setActSelec(Actividad actSelec) {
+		this.actSelec = actSelec;
+	}
+
+	public Actividad getActSelec2() {
+		return actSelec2;
+	}
+
+	public void setActSelec2(Actividad actSelec2) {
+		this.actSelec2 = actSelec2;
+	}
+
+	public List<Actividad> getList() {
+		list = new ArrayList<Actividad>();
+		if (procesoSelec != 0L) {
+			list = actividadDao.getListaActividad(procesoSelec);
+		}
+		return list;
+	}
+
+	public void setList(List<Actividad> list) {
+		this.list = list;
+	}
+
+	public List<SelectItem> getComboRol() {
+		comboRol = rolDao.getComboRol();
+		return comboRol;
+	}
+
+	public void setComboRol(List<SelectItem> comboRol) {
+		this.comboRol = comboRol;
+	}
+
+	public List<SelectItem> getComboEstado() {
+		comboEstado = new ArrayList<SelectItem>();
+		SelectItem item = null;
+		item = new SelectItem("A", "Activo");
+		comboEstado.add(item);
+		item = new SelectItem("E", "Inactivo");
+		comboEstado.add(item);
+
+		return comboEstado;
+	}
+
+	public void setComboEstado(List<SelectItem> comboEstado) {
+		this.comboEstado = comboEstado;
+	}
+
+	public boolean isSwBtnDesc() {
+		if (actividadSelec > 0L)
+			swBtnDesc = false;
+		else
+			swBtnDesc = true;
+		return swBtnDesc;
+	}
+
+	public void setswBtnDesc(boolean swBtnDesc) {
+		this.swBtnDesc = swBtnDesc;
+	}
+
+	public void guardar() {
+		validarSesion();
+
+		if (!validarDatos())
+			return;
+
+		context = FacesContext.getCurrentInstance();
+		bundle = context.getApplication()
+				.getResourceBundle(context, "messages");
+		try {
+
+			ActividadPK id = new ActividadPK(actividadSelec, procesoSelec);
+			Actividad actividad = actividadDao.find(id);
+
+			actividad.setRol(rolDao.find(rolSelec));
+			actividad.setUsuarioModifica(userSesion.getUsuario());
+			actividad.setFechaModificacion(new Date());
+
+			actividadDao.save(actividad);
+
+
+
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_INFO, "EXITO",
+							bundle.getString("msgRegistrar")));
+			limpiarRegistrar();
+		} catch (Exception e) {
+			e.printStackTrace();
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, "ERROR",
+							bundle.getString("msgRegistrarError")));
+		}
+	}
+
+	public void limpiar() {
+		nuevo = new Actividad();
+		modifica = new Actividad();
+		actSelec2 = new Actividad();
+		rolSelec = 0L;
+		procesoSelec = 0L;
+		actividadSelec = 0L;
+		tipoDocSelec = 0L;
+		// opcionDoc = "2";
+		// estado = true;
+		listTipoDoc = new ArrayList<DetalleActividad>();
+	}
+
+	public void limpiarRegistrar() {
+		nuevo = new Actividad();
+		modifica = new Actividad();
+		rolSelec = 0L;
+		// procesoSelec = 0L;
+		actividadSelec = 0L;
+		tipoDocSelec = 0L;
+		// opcionDoc = "2";
+		// estado = true;
+		listTipoDoc = new ArrayList<DetalleActividad>();
+	}
+
+	public void editSelec() {
+		List<DetalleActividad> listTipoDocM = null;
+		try {
+			listTipoDocM = new ArrayList<DetalleActividad>();
+			listTipoDocM = detalleDao
+					.getListaDetalleActividad(modifica.getId());
+
+			// if (listTipoDocM.size() > 0)
+			// opcionDoc = "1";
+			// else
+			// opcionDoc = "2";
+			listTipoDoc = listTipoDocM;
+		} catch (Exception e) {
+			e.printStackTrace();
+			listTipoDocM = null;
+		}
+	}
+
+	public void validarSesion() {
+		FacesContext context = FacesContext.getCurrentInstance();
+
+		userSesion = (Usuario) context.getExternalContext().getSessionMap()
+				.get(loginController.getUsername());
+
+		if (userSesion == null) {
+			String ctxPath = context.getExternalContext()
+					.getRequestContextPath();
+			try {
+				context.getExternalContext().redirect(ctxPath + "/login.jsf");
+			} catch (Exception e) {
+				// e.printStackTrace();
+			}
+		}
+	}
+
+	public boolean validarDatos() {
+		context = FacesContext.getCurrentInstance();
+		bundle = context.getApplication()
+				.getResourceBundle(context, "messages");
+
+		if (procesoSelec.equals(0L)) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+							bundle.getString("msgSelecProceso")));
+			return false;
+		}
+		if (actividadSelec.equals(0L)) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+							bundle.getString("msgSelecActividad")));
+			return false;
+		}
+
+		if (rolSelec.equals(0L)) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+							bundle.getString("msgSelecRol")));
+			return false;
+		}
+
+		// if (opcionDoc.equalsIgnoreCase("1")) {// adjuntar
+		// FacesContext.getCurrentInstance().addMessage(
+		// null,
+		// new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+		// bundle.getString("msgAgregarTipoDoc")));
+		// return false;
+		// }
+
+		return true;
+	}
+
+	public void agregar() {
+		TipoDocumento tipoDoc = null;
+		DetalleActividad detalle = null;
+		Actividad actividad = null;
+		ActividadPK id = null;
+		List<DetalleActividad> listDetalle = null;
+
+		context = FacesContext.getCurrentInstance();
+		bundle = context.getApplication()
+				.getResourceBundle(context, "messages");
+
+		try {
+			validarSesion();
+
+			if (!validarAgregar())
+				return;
+
+			listDetalle = new ArrayList<DetalleActividad>();
+
+			id = new ActividadPK(actividadSelec, procesoSelec);
+
+			listDetalle = detalleDao.getListaDetalleActividad(id, tipoDocSelec);
+
+			if (listDetalle.size() > 0) {
+
+				if (listDetalle.get(0).getEstado().equalsIgnoreCase("A")) {
+					FacesContext.getCurrentInstance().addMessage(
+							null,
+							new FacesMessage(FacesMessage.SEVERITY_WARN,
+									"ADVERTENCIA", bundle
+											.getString("msgTipoDocExiste")));
+				} else {// eliminado
+					listDetalle.get(0).setEstado("A");
+					listDetalle.get(0).setUsuarioModifica(
+							userSesion.getUsuario());
+					listDetalle.get(0).setFechaModificacion(new Date());
+
+					detalleDao.edit(listDetalle.get(0));
+				}
+			} else {// nuevo
+				tipoDoc = tipoDocDao.find(tipoDocSelec);
+				actividad = actividadDao.find(id);
+				detalle = new DetalleActividad();
+				detalle.setActividad(actividad);
+
+				detalle.setIdDetalleActividad(detalleDao.getIdMax());
+				detalle.setTipoDocumento(tipoDoc);
+				detalle.setEstado("A");
+				detalle.setUsuarioRegistra(userSesion.getUsuario());
+				detalle.setUsuarioModifica(userSesion.getUsuario());
+				detalle.setFechaCreacion(new Date());
+				detalle.setFechaModificacion(new Date());
+
+				detalleDao.save(detalle);
+
+				FacesContext.getCurrentInstance().addMessage(
+						null,
+						new FacesMessage(FacesMessage.SEVERITY_INFO, "EXITO",
+								bundle.getString("msgAgregarTipoDocExito")));
+			}
+
+			tipoDocSelec = 0L;
+			// opcionDoc = "2";
+			list = null;
+			detalle = null;
+			actividad = null;
+			id = null;
+			tipoDoc = null;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			// opcionDoc = "2";
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, "ERROR",
+							bundle.getString("msgAgregarTipoDocError")));
+		}
+	}
+
+	public boolean validarAgregar() {
+		context = FacesContext.getCurrentInstance();
+		bundle = context.getApplication()
+				.getResourceBundle(context, "messages");
+
+		if (actividadSelec == 0L) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+							bundle.getString("msgSelecActividad")));
+			return false;
+		}
+
+		if (tipoDocSelec == 0L) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+							bundle.getString("msgSelecTipoDoc")));
+			return false;
+		}
+
+		return true;
+	}
+
+	public void eliminarDoc() {
+		context = FacesContext.getCurrentInstance();
+		bundle = context.getApplication()
+				.getResourceBundle(context, "messages");
+		try {
+			validarSesion();
+
+			detalleSelec.setEstado("E");
+			detalleSelec.setUsuarioModifica(userSesion.getUsuario());
+			detalleSelec.setFechaModificacion(new Date());
+
+			detalleDao.edit(detalleSelec);
+
+			detalleSelec = null;
+		} catch (Exception e) {
+			e.printStackTrace();
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, "ERROR",
+							bundle.getString("msgEliminarTipoDoc")));
+		}
+	}
+
+	public void buscarActividad() {
+		System.out.println("buscarActividad");
+		ActividadPK id = new ActividadPK(actividadSelec, procesoSelec);
+		actSelec2 = actividadDao.find(id);
+		System.out.println(actSelec2.getDescripcion());
+
+	}
+
+	public void guardarDescripcion() {
+		validarSesion();
+
+		context = FacesContext.getCurrentInstance();
+		bundle = context.getApplication()
+				.getResourceBundle(context, "messages");
+		try {
+
+			actividadDao.save(actSelec2);
+
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_INFO, "EXITO",
+							bundle.getString("msgRegistrar")));
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, "ERROR",
+							bundle.getString("msgRegistrarError")));
+		}
+	}
+
+}

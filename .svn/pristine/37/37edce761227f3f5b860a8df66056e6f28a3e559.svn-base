@@ -1,0 +1,25 @@
+package gob.servir.workflow.dao;
+
+import gob.servir.workflow.model.Actividad;
+import gob.servir.workflow.model.ActividadPK;
+import gob.servir.workflow.model.DetalleActividad;
+
+import java.util.List;
+
+import javax.faces.model.SelectItem;
+
+public interface ActividadDao {
+	
+	public abstract Actividad find(ActividadPK id);
+	
+	public abstract Actividad save(Actividad obj);
+	
+	public abstract void save(Actividad obj, List<DetalleActividad> listDetalle);
+	
+	public abstract List<Actividad> getListaActividad();
+	
+	public abstract List<Actividad> getListaActividad(Long idProceso);
+	
+	public abstract List<SelectItem> getComboActividad(Long idProceso);
+
+}

@@ -1,0 +1,270 @@
+package gob.servir.workflow.controller;
+
+import gob.servir.workflow.dao.TipoDocumentoDao;
+import gob.servir.workflow.model.TipoDocumento;
+import gob.servir.workflow.model.Usuario;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.ResourceBundle;
+
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component("tipoDocumentoController")
+@Scope("session")
+public class TipoDocumentoController implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(TipoDocumentoController.class);
+
+	@Autowired
+	private TipoDocumentoDao tipoDocumentoDao;
+	private TipoDocumento nuevoTipoDocumento = new TipoDocumento();
+	private TipoDocumento modificaTipoDocumento = new TipoDocumento();
+	private TipoDocumento tipoDocumentoSelec = null;
+	private List<TipoDocumento> listaTipoDocumento = null;
+
+	private List<SelectItem> comboEstado = new ArrayList<SelectItem>();
+
+	private ResourceBundle resourceBundle = null;
+	private FacesContext ctx = null;
+
+	private Usuario userSesion = null;
+
+	public Usuario getUserSesion() {
+		return userSesion;
+	}
+
+	public void setUserSesion(Usuario userSesion) {
+		this.userSesion = userSesion;
+	}
+
+	public TipoDocumentoController() {
+		super();
+	}
+
+	public TipoDocumento getNuevoTipoDocumento() {
+		return nuevoTipoDocumento;
+	}
+
+	public void setNuevoTipoDocumento(TipoDocumento nuevoTipoDocumento) {
+		this.nuevoTipoDocumento = nuevoTipoDocumento;
+	}
+
+	public TipoDocumento getModifica() {
+		return modificaTipoDocumento;
+	}
+
+	public void setModifica(TipoDocumento modifica) {
+		this.modificaTipoDocumento = modifica;
+	}
+
+	public TipoDocumento getTipoDocumentoSelec() {
+		return tipoDocumentoSelec;
+	}
+
+	public void setTipoDocumentoSelec(TipoDocumento tipoDocumentoSelec) {
+		this.tipoDocumentoSelec = tipoDocumentoSelec;
+	}
+
+	public List<TipoDocumento> getListaTipoDocumento() {
+		listaTipoDocumento = new ArrayList<TipoDocumento>();
+		listaTipoDocumento = tipoDocumentoDao.getListaTipoDocumento();
+		return listaTipoDocumento;
+	}
+
+	public void setListaTipoDocumento(List<TipoDocumento> listaTipoDocumento) {
+		this.listaTipoDocumento = listaTipoDocumento;
+	}
+
+	public List<SelectItem> getComboEstado() {
+		comboEstado = new ArrayList<SelectItem>();
+		SelectItem item = null;
+		item = new SelectItem("A", "Activo");
+		comboEstado.add(item);
+		item = new SelectItem("E", "Inactivo");
+		comboEstado.add(item);
+
+		return comboEstado;
+	}
+
+	public void setComboEstado(List<SelectItem> comboEstado) {
+		this.comboEstado = comboEstado;
+	}
+
+	public void guardar() {
+		logger.info("Metodo guardar Tipo de Documento");
+		validarSesion();
+
+		ctx = FacesContext.getCurrentInstance();
+		resourceBundle = ctx.getApplication()
+				.getResourceBundle(ctx, "messages");
+
+		if (!validarDatos())
+			return;
+
+		if (!nuevoTipoDocumento())
+			return;
+
+		try {
+			nuevoTipoDocumento.setEstado("A");
+			nuevoTipoDocumento.setNombre(nuevoTipoDocumento.getNombre().trim());
+			nuevoTipoDocumento.setUsuarioRegistra(userSesion.getUsuario());
+			nuevoTipoDocumento.setFechaCreacion(new Date());
+			tipoDocumentoDao.save(nuevoTipoDocumento);
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_INFO, "EXITO",
+							resourceBundle.getString("msgRegistrar")));
+			limpiar();
+		} catch (Exception e) {
+			e.printStackTrace();
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, "ERROR",
+							resourceBundle.getString("msgRegistrarError")));
+		}
+
+	}
+
+	public void modificar() {
+
+		ctx = FacesContext.getCurrentInstance();
+		resourceBundle = ctx.getApplication()
+				.getResourceBundle(ctx, "messages");
+
+		try {
+			if (modificaTipoDocumento != null) {
+				validarSesion();
+				if (!modificaTipoDocumento.getNombre().trim()
+						.equalsIgnoreCase("")) {
+					modificaTipoDocumento.setUsuarioModifica(userSesion
+							.getUsuario());
+					modificaTipoDocumento.setFechaModificacion(new Date());
+					modificaTipoDocumento.setNombre(modificaTipoDocumento
+							.getNombre().trim());
+					tipoDocumentoDao.save(modificaTipoDocumento);
+					FacesContext.getCurrentInstance().addMessage(
+							null,
+							new FacesMessage(FacesMessage.SEVERITY_INFO,
+									"EXITO", resourceBundle
+											.getString("msgModificar")));
+				}
+
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, "ERROR",
+							resourceBundle.getString("msgModificarError")));
+		}
+	}
+
+	public void eliminar() {
+
+		try {
+			if (tipoDocumentoSelec != null) {
+				tipoDocumentoSelec.setEstado("E");
+				tipoDocumentoDao.save(tipoDocumentoSelec);
+				FacesContext.getCurrentInstance().addMessage(
+						null,
+						new FacesMessage(FacesMessage.SEVERITY_INFO, "EXITO",
+								resourceBundle.getString("msgEliminado")));
+			}
+			limpiar();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, "ERROR",
+							resourceBundle.getString("msgEliminadoError")));
+		}
+	}
+
+	public void limpiar() {
+		nuevoTipoDocumento = new TipoDocumento();
+		modificaTipoDocumento = new TipoDocumento();
+	}
+
+	public void editSelec() {
+		modificaTipoDocumento = new TipoDocumento();
+		try {
+			modificaTipoDocumento = tipoDocumentoSelec;
+		} catch (Exception e) {
+			e.printStackTrace();
+			modificaTipoDocumento = new TipoDocumento();
+		}
+	}
+
+	public boolean validarDatos() {
+
+		ctx = FacesContext.getCurrentInstance();
+		resourceBundle = ctx.getApplication()
+				.getResourceBundle(ctx, "messages");
+		String txtObligatorio = resourceBundle.getString("msgTxtObligatorio");
+
+		if (nuevoTipoDocumento == null)
+			return false;
+
+		if (nuevoTipoDocumento.getNombre().trim().equalsIgnoreCase("")) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+							txtObligatorio));
+			return false;
+		}
+
+		return true;
+
+	}
+
+	public boolean nuevoTipoDocumento() {
+
+		ctx = FacesContext.getCurrentInstance();
+		resourceBundle = ctx.getApplication()
+				.getResourceBundle(ctx, "messages");
+
+		if (tipoDocumentoDao.findName(nuevoTipoDocumento.getNombre().trim())) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+							resourceBundle.getString("msgRegistroExite")));
+			return false;
+		}
+
+		return true;
+
+	}
+
+	public void validarSesion() {
+		FacesContext context = FacesContext.getCurrentInstance();
+		userSesion = (Usuario) context.getExternalContext().getSessionMap()
+				.get("userSesion");
+
+		if (userSesion == null) {
+			String ctxPath = context.getExternalContext()
+					.getRequestContextPath();
+			try {
+				context.getExternalContext().redirect(ctxPath + "/login.jsf");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+}

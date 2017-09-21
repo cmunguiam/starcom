@@ -1,0 +1,263 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions">
+
+<h:head>
+	<h:outputStylesheet name="css/cssContent.css" />
+</h:head>
+<h:body>
+	<p:growl id="messages" showDetail="true" life="40000" />
+	<p:panel id="datos1" header="Terminar Flujo">
+
+		<table cellpadding="2" cellspacing="4">
+			<tr>
+				<td>#{messages.lblEntidad}</td>
+				<td><p:inputText id="entidad" tabindex="1" maxlength="60"
+						value="#{terminarFlujoController.entidadDestinoSelect2.desc_ed}"
+						style=" width : 315px;" readonly="true" /> <p:spacer width="10" />
+					<p:commandButton value="" icon="ui-icon-search"
+						update=":frm:pnlEdit" oncomplete="editDialog.show()"
+						style="height:25px;" title="Buscar Entidad Pública">
+					</p:commandButton></td>
+
+				<td>#{messages.lblNumeroFlujo}</td>
+				<td><p:inputText id="sidFlujo"
+						value="#{terminarFlujoController.idFlujo}"
+						style=" width : 90px;color:red" /></td>
+				<pe:keyFilter for="sidFlujo" mask="num" />
+			</tr>
+
+			<tr>
+				<td>#{messages.lblGerentePublico}</td>
+				<td><p:inputText id="publico" tabindex="3"
+						value="#{terminarFlujoController.gerentePublicoSelect2.nombres}"
+						style=" width : 315px;" readonly="true" /> <p:spacer width="10" />
+					<p:commandButton value="" icon="ui-icon-search"
+						update=":frm:pnlEdit2" oncomplete="editDialog2.show()"
+						style="height:25px;" title="Buscar Gerente Público">
+					</p:commandButton></td>
+			</tr>
+			<tr>
+				<td>#{messages.lblPuesto}</td>
+				<td><p:selectOneMenu id="tipoPuesto"
+						value="#{terminarFlujoController.puestoSelec}"
+						style=" width : 376px;">
+						<f:selectItems value="#{terminarFlujoController.comboPuesto}" />
+					</p:selectOneMenu></td>
+			</tr>
+		</table>
+
+		<p:dialog id="dlgEdit" header="#{messages.lblBuscarEntidad}"
+			widgetVar="editDialog" modal="true" resizable="false" width="500"
+			showEffect="clip" closable="true" hideEffect="fold">
+
+			<p:panel id="pnlEdit">
+				<table cellpadding="2" cellspacing="2">
+					<tr>
+						<td>#{messages.lblBuscarEntidadNombre}</td>
+						<td><p:inputText
+								value="#{terminarFlujoController.entidadBusc}" /></td>
+						<td><p:commandButton value="#{messages.btnBuscar}"
+								actionListener="#{terminarFlujoController.buscarEntidadBtn}"
+								update="dtListaE" icon="ui-icon-check" /></td>
+					</tr>
+				</table>
+			</p:panel>
+			<p:separator />
+
+			<p:dataTable var="entidadTipo"
+				value="#{terminarFlujoController.listaEntidadTipo}" id="dtListaE"
+				scrollable="true" scrollHeight="235" paginator="true" rows="10"
+				paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+				rowsPerPageTemplate="5,10,15"
+				emptyMessage="No hay resultados para el criterio de busqueda">
+
+				<f:facet name="header">  
+            		#{messages.lblListEntidades}
+       			</f:facet>
+
+				<p:column headerText="#{messages.lblCodigo}" style="width:10%"
+					sortBy="#{entidadTipo.id_ed}">
+					<h:outputText value="#{entidadTipo.id_ed}" />
+				</p:column>
+				<p:column headerText="#{messages.lblNombre}" style="width:50%"
+					sortBy="#{entidadTipo.desc_ed}">
+					<h:outputText value="#{entidadTipo.desc_ed}" />
+				</p:column>
+				<p:column headerText="Opciones" style="width:20%">
+					<p:commandButton value="" update=":frm:entidad"
+						oncomplete="editDialog.hide()" icon="ui-icon-check"
+						title="Seleccionar Entidad Destino">
+						<f:setPropertyActionListener value="#{entidadTipo}"
+							target="#{terminarFlujoController.entidadDestinoSelect2}" />
+					</p:commandButton>
+				</p:column>
+			</p:dataTable>
+
+		</p:dialog>
+
+		<p:dialog id="dlgEdit2" header="#{messages.lblBuscarGerente}"
+			widgetVar="editDialog2" modal="true" resizable="false" width="600"
+			showEffect="clip" closable="true" hideEffect="fold">
+
+			<p:panel id="pnlEdit2">
+				<table cellpadding="2" cellspacing="2">
+					<tr>
+						<td><h:outputText value="#{messages.lblBuscarGerenteNombre}" /></td>
+						<td><p:inputText
+								value="#{terminarFlujoController.gerenteBusc}" /></td>
+						<td><p:commandButton value="#{messages.btnBuscar}"
+								actionListener="#{terminarFlujoController.buscarGerente}"
+								update=":frm:dtLista2" icon="ui-icon-check" /></td>
+					</tr>
+				</table>
+			</p:panel>
+			<p:separator />
+
+			<p:dataTable var="entidadGerente"
+				value="#{terminarFlujoController.listaGerentePublico}" id="dtLista2"
+				scrollable="true" scrollHeight="235" paginator="true" rows="10"
+				paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+				rowsPerPageTemplate="5,10,15"
+				emptyMessage="No hay resultados para el criterio de busqueda">
+				<f:facet name="header">    
+            	#{messages.lblListGerentesPublicos}
+            	</f:facet>
+				<p:column headerText="#{messages.lblCodigo}" style="width:15%"
+					sortBy="#{entidadGerente.cod_gerente}">
+					<h:outputText value="#{entidadGerente.cod_gerente}" />
+				</p:column>
+				<p:column headerText="#{messages.lblListGerentesPublicosNombres}"
+					sortBy="#{entidadGerente.nombres}" style="width:61%">
+					<h:outputText
+						value="#{entidadGerente.ap_paterno} #{entidadGerente.ap_materno}, #{entidadGerente.nombres}" />
+				</p:column>
+				<p:column headerText="#{messages.lblListGerentesPublicosDni}"
+					sortBy="#{entidadGerente.dni}" style="width:17%">
+					<h:outputText value="#{entidadGerente.dni}" />
+				</p:column>
+				<p:column headerText="Opciones" style="width:14%">
+					<p:commandButton value="" update=":frm:publico"
+						oncomplete="editDialog2.hide()" icon="ui-icon-check"
+						title="Seleccionar Gerente Público">
+						<f:setPropertyActionListener value="#{entidadGerente}"
+							target="#{terminarFlujoController.gerentePublicoSelect2}" />
+					</p:commandButton>
+				</p:column>
+			</p:dataTable>
+		</p:dialog>
+
+		<p:separator />
+		<p:commandButton id="b1" value="Buscar" icon="ui-icon ui-icon-search"
+			update=":frm:datos1,dtLista"
+			action="#{terminarFlujoController.buscarDatos}" inmediate="true" />
+		<p:commandButton id="clearButton" value="Cancelar"
+			action="#{terminarFlujoController.limpiar}" icon="ui-icon-close"
+			update="datos1" />
+		<p:separator />
+
+		<p:dataTable var="flujo" id="dtLista" scrollable="true"
+			value="#{terminarFlujoController.listaFlujo}" scrollHeight="120"
+			style="width:100%" paginator="true" rows="5"
+			emptyMessage="#{messages.msgEmptyMessage}"
+			paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			rowsPerPageTemplate="5,10,15">
+
+			<f:facet name="header">  
+            Lista de Flujos
+            </f:facet>
+
+			<p:column headerText="Código" style="width:10%"
+				sortBy="#{flujo.idFlujo}">
+				<h:outputText value="#{flujo.idFlujo}" />
+			</p:column>
+			<p:column headerText="Entidad Destino" style="width:40%"
+				sortBy="#{flujo.entidadDestino.desc_ed}">
+				<h:outputText value="#{flujo.entidadDestino.desc_ed}" />
+			</p:column>
+			<p:column headerText="Proceso" style="width:20%"
+				sortBy="#{flujo.proceso.nombre}">
+				<h:outputText value="#{flujo.proceso.nombre}" />
+			</p:column>
+			<p:column headerText="Fecha" style="width:18%"
+				sortBy="#{flujo.fechaCreacion}">
+				<h:outputText value="#{flujo.fechaCreacion}">
+					<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+				</h:outputText>
+			</p:column>
+			<p:column headerText="Estado" style="width:10%"
+				sortBy="#{flujo.estado}">
+				<h:outputText
+					value="#{flujo.estado.equals('P')?'Pendiente':flujo.estado.equals('AT')?'Terminado':'Cancelado'}" />
+			</p:column>
+			<p:column headerText="Opciones" style="width:10%">
+				<p:commandButton value="" icon="ui-icon-check" inmediate="true"
+					process="@this" action="#{terminarFlujoController.buscarEntidad}"
+					update=":frm:datos2" title="Seleccionar Flujo">
+					<f:setPropertyActionListener value="#{flujo}"
+						target="#{terminarFlujoController.nuevoFlujoEditar}" />
+				</p:commandButton>
+			</p:column>
+		</p:dataTable>
+
+		<p:spacer />
+
+		<p:panel id="datos2" header="Detalle Flujo">
+
+			<table width="100%" cellpadding="2" cellspacing="2">
+				<tr>
+					<td><h:outputText value="Flujo Número:"
+							style="font-weight:bold;" /></td>
+					<td><h:outputText
+							value="#{terminarFlujoController.nuevoFlujoEditar.idFlujo}"
+							style=" width : 60px;color:blue" /></td>
+					<td><h:outputText value="Entidad Destino:"
+							style="font-weight:bold;" /></td>
+					<td><h:outputText
+							value="#{terminarFlujoController.entidadBusc}" /></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="Puesto Tipo:"
+							style="font-weight:bold;" /></td>
+					<td><h:outputText
+							value="#{terminarFlujoController.nuevoFlujoEditar.puestoTipo.nombre}" />
+					</td>
+					<td><h:outputText value="Proceso:" style="font-weight:bold;" /></td>
+					<td><h:outputText
+							value="#{terminarFlujoController.nuevoFlujoEditar.proceso.nombre}" /></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="Gerente Público:"
+							style="font-weight:bold;" /></td>
+					<td><h:outputText
+							value="#{terminarFlujoController.gerenteBusc}" /></td>
+					<td></td>
+					<td></td>
+				</tr>
+			</table>
+
+			<h:panelGrid columns="3" cellpadding="2">
+				<h:outputText value="Comentario" style="font-weight:bold;" />
+				<p:inputTextarea rows="3" cols="62" queryDelay="400"
+					value="#{terminarFlujoController.nuevoFlujoEditar.comentario}"
+					minQueryLength="4"
+					readonly="#{terminarFlujoController.textComentario}" />
+				<p:commandButton value="Terminar"
+					icon="ui-icon ui-icon-circle-check"
+					action="#{terminarFlujoController.terminarFlujo}" inmediate="true"
+					update="dtLista,messages,datos2"
+					disabled="#{terminarFlujoController.nuevoFlujoEditar.estado.equals('C')? true:terminarFlujoController.nuevoFlujoEditar.estado.equals('AT')?true:false}">
+					<f:setPropertyActionListener
+						value="#{terminarFlujoController.nuevoFlujoEditar.idFlujo}"
+						target="#{terminarFlujoController.idFlujo}" />
+				</p:commandButton>
+			</h:panelGrid>
+		</p:panel>
+	</p:panel>
+</h:body>
+</html>

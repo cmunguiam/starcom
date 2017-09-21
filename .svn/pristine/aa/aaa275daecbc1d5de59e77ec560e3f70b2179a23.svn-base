@@ -1,0 +1,21 @@
+package gob.servir.workflow.dao;
+
+import gob.servir.workflow.model.EntidadDestino;
+
+import java.util.List;
+
+import javax.faces.model.SelectItem;
+
+public interface EntidadDestinoDao {
+	
+	public abstract EntidadDestino find(Long id);
+	
+	public abstract List<EntidadDestino> buscarNombre(String nombre);
+	
+	public abstract List<EntidadDestino> getListaEntidad();
+	
+	public abstract List<SelectItem> getComboEntidad();
+	
+
+
+}

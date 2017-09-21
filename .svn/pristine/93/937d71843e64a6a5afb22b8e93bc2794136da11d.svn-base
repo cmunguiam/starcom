@@ -1,0 +1,92 @@
+package gob.servir.workflow.bean;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import gob.servir.workflow.model.Bandeja;
+
+import org.primefaces.model.LazyDataModel;
+import org.primefaces.model.SortOrder;
+
+public class LazyBandejaDataModel extends LazyDataModel<Bandeja> {
+
+	private List<Bandeja> datasource;
+
+	public LazyBandejaDataModel(List<Bandeja> datasource) {
+		super();
+		this.datasource = datasource;
+	}
+
+	@Override
+	public Bandeja getRowData(String rowKey) {
+		for (Bandeja car : datasource) {
+			if (car.getBandejaPK().getCorrelativo().toString().equals(rowKey))
+				return car;
+		}
+
+		return null;
+	}
+
+	@Override
+	public Object getRowKey(Bandeja car) {
+		return car.getBandejaPK().getCorrelativo().toString();
+	}
+
+	@Override
+	public List<Bandeja> load(int first, int pageSize, String sortField,
+			SortOrder sortOrder, Map<String, String> filters) {
+		List<Bandeja> data = new ArrayList<Bandeja>();
+
+		// filter
+		for (Bandeja car : datasource) {
+			boolean match = true;
+
+			for (Iterator<String> it = filters.keySet().iterator(); it
+					.hasNext();) {
+				try {
+					String filterProperty = it.next();
+					String filterValue = filters.get(filterProperty);
+					String fieldValue = String.valueOf(car.getClass()
+							.getField(filterProperty).get(car));
+
+					if (filterValue == null
+							|| fieldValue.startsWith(filterValue)) {
+						match = true;
+					} else {
+						match = false;
+						break;
+					}
+				} catch (Exception e) {
+					match = false;
+				}
+			}
+
+			if (match) {
+				data.add(car);
+			}
+		}
+
+		// sort
+		/*if (sortField != null) {
+			Collections.sort(data, new LazySorter(sortField, sortOrder));
+		}*/
+
+		// rowCount
+		int dataSize = data.size();
+		this.setRowCount(dataSize);
+
+		// paginate
+		if (dataSize > pageSize) {
+			try {
+				return data.subList(first, first + pageSize);
+			} catch (IndexOutOfBoundsException e) {
+				return data.subList(first, first + (dataSize % pageSize));
+			}
+		} else {
+			return data;
+		}
+	}
+
+}

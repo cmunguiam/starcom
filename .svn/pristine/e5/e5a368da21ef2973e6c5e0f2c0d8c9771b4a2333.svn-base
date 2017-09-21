@@ -1,0 +1,737 @@
+package gob.servir.workflow.daoImpl;
+
+import gob.servir.workflow.dao.BandejaDao;
+import gob.servir.workflow.model.Actividad;
+import gob.servir.workflow.model.ActividadPK;
+import gob.servir.workflow.model.Bandeja;
+import gob.servir.workflow.model.BandejaPK;
+import gob.servir.workflow.model.Documento;
+import gob.servir.workflow.model.EntidadDestino;
+import gob.servir.workflow.model.Flujo;
+import gob.servir.workflow.model.GerentePublico;
+import gob.servir.workflow.model.Proceso;
+import gob.servir.workflow.model.PuestoTipo;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * 
+ * @author Hever Pumallihua
+ */
+@Repository
+public class BandejaDaoImpl implements BandejaDao {
+	@PersistenceContext
+	private EntityManager em;
+
+	@Transactional
+	public Bandeja find(BandejaPK id) {
+		try {
+			return em.find(Bandeja.class, id);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+
+	}
+
+	@Transactional
+	public Bandeja save(Bandeja obj) {
+		if (obj.getBandejaPK() == null) {
+			em.persist(obj);
+			return obj;
+		} else {
+			return em.merge(obj);
+		}
+	}
+
+	@Transactional
+	public boolean atenderFlujo(Bandeja bandeja, List<Documento> listaDetalle) {
+		boolean resultado = false;
+		try {
+
+			em.merge(bandeja);
+
+			for (Documento row : listaDetalle) {
+				em.persist(row);
+			}
+
+			ActividadPK actividadPK = new ActividadPK((bandeja.getBandejaPK()
+					.getIdActividad() + 1), bandeja.getBandejaPK()
+					.getIdProceso());
+
+			Actividad act = em.find(Actividad.class, actividadPK);
+
+			Flujo flujo = em.find(Flujo.class, bandeja.getBandejaPK()
+					.getIdFlujo());
+
+			BandejaPK bandejaPK = new BandejaPK(bandeja.getBandejaPK()
+					.getIdFlujo(), bandeja.getBandejaPK().getIdActividad() + 1,
+					bandeja.getBandejaPK().getIdProceso(), bandeja
+							.getBandejaPK().getCorrelativo());
+
+			Bandeja ban = new Bandeja();
+			ban.setBandejaPK(bandejaPK);
+			ban.setActividad(act);
+			ban.setFlujo(flujo);
+			ban.setEstado("EE");
+			ban.setFechaCreacion(new Date());
+			ban.setUsuarioRegistra(bandeja.getUsuarioModifica());
+
+			em.persist(ban);
+			resultado = true;
+		} catch (Exception e) {
+			resultado = false;
+			e.printStackTrace();
+			return resultado;
+		}
+		return resultado;
+	}
+
+	@Transactional
+	public boolean atenderActividad(Bandeja paramBandeja) {
+		boolean resultado = false;
+		Bandeja objBandeja = null;
+		BandejaPK bandejaPK = null;
+		Long idSgteAct = null;
+		Long correlativo = null;
+		try {
+
+			em.merge(paramBandeja);
+
+			idSgteAct = paramBandeja.getBandejaPK().getIdActividad() + 1;
+			correlativo = paramBandeja.getBandejaPK().getCorrelativo() + 1;
+
+			bandejaPK = new BandejaPK(paramBandeja.getBandejaPK().getIdFlujo(),
+					idSgteAct, paramBandeja.getBandejaPK().getIdProceso(),
+					correlativo);
+
+			objBandeja = new Bandeja();
+			objBandeja.setBandejaPK(bandejaPK);
+			objBandeja.setEstado("EE");
+			objBandeja.setFechaCreacion(new Date());
+			objBandeja.setUsuarioRegistra(paramBandeja.getUsuarioModifica());
+
+			em.persist(objBandeja);
+			resultado = true;
+		} catch (Exception e) {
+			resultado = false;
+			e.printStackTrace();
+			return resultado;
+		}
+		return resultado;
+	}
+
+	@Transactional
+	public boolean atenderCompuertaParalela(Bandeja bandeja, int opcion) {
+		boolean resultado = false;
+		Bandeja objBandeja = null;
+		BandejaPK bandejaPK = null;
+		Long idSgteAct = null;
+		Long correlativo = null;
+		try {
+
+			em.merge(bandeja);
+
+			if (opcion == 1) {
+
+				idSgteAct = bandeja.getBandejaPK().getIdActividad() + 1;
+				correlativo = bandeja.getBandejaPK().getCorrelativo() + 1;
+
+				bandejaPK = new BandejaPK(bandeja.getBandejaPK().getIdFlujo(),
+						idSgteAct, bandeja.getBandejaPK().getIdProceso(),
+						correlativo);
+
+				objBandeja = new Bandeja();
+				objBandeja.setBandejaPK(bandejaPK);
+				objBandeja.setEstado("EE");
+				objBandeja.setFechaCreacion(new Date());
+				objBandeja.setUsuarioRegistra(bandeja.getUsuarioModifica());
+
+				em.persist(objBandeja);
+
+				idSgteAct += 1;
+				correlativo += 1;
+
+				bandejaPK = new BandejaPK(bandeja.getBandejaPK().getIdFlujo(),
+						idSgteAct, bandeja.getBandejaPK().getIdProceso(),
+						correlativo);
+
+				objBandeja = new Bandeja();
+				objBandeja.setBandejaPK(bandejaPK);
+				objBandeja.setEstado("EE");
+				objBandeja.setFechaCreacion(new Date());
+				objBandeja.setUsuarioRegistra(bandeja.getUsuarioModifica());
+
+				em.persist(objBandeja);
+			}
+
+			if (opcion == 2) {
+
+				idSgteAct = bandeja.getBandejaPK().getIdActividad() + 1;
+				correlativo = bandeja.getBandejaPK().getCorrelativo() + 1;
+
+				bandeja.getBandejaPK().setIdActividad(idSgteAct);
+				bandeja.getBandejaPK().setCorrelativo(correlativo);
+
+				objBandeja = new Bandeja();
+				objBandeja = em.find(Bandeja.class, bandeja.getBandejaPK());
+
+				if (objBandeja.getEstado().equalsIgnoreCase("AT")) {
+					idSgteAct += 1;
+					correlativo += 1;
+
+					bandeja.getBandejaPK().setIdActividad(idSgteAct);
+					bandeja.getBandejaPK().setCorrelativo(correlativo);
+
+					objBandeja = new Bandeja();
+					objBandeja.setBandejaPK(bandeja.getBandejaPK());
+					objBandeja.setEstado("EE");
+					objBandeja.setFechaCreacion(new Date());
+					objBandeja.setUsuarioRegistra(bandeja.getUsuarioModifica());
+
+					em.persist(objBandeja);
+				}
+				
+			}
+
+			if (opcion == 3) {
+
+				idSgteAct = bandeja.getBandejaPK().getIdActividad() - 1;
+				correlativo = bandeja.getBandejaPK().getCorrelativo() - 1;
+
+				bandeja.getBandejaPK().setIdActividad(idSgteAct);
+				bandeja.getBandejaPK().setCorrelativo(correlativo);
+
+				objBandeja = new Bandeja();
+				objBandeja = em.find(Bandeja.class, bandeja.getBandejaPK());
+
+				if (objBandeja.getEstado().equalsIgnoreCase("AT")) {
+					idSgteAct += 2;
+					correlativo += 2;
+
+					bandeja.getBandejaPK().setIdActividad(idSgteAct);
+					bandeja.getBandejaPK().setCorrelativo(correlativo);
+
+					objBandeja = new Bandeja();
+					objBandeja.setBandejaPK(bandeja.getBandejaPK());
+					objBandeja.setEstado("EE");
+					objBandeja.setFechaCreacion(new Date());
+					objBandeja.setUsuarioRegistra(bandeja.getUsuarioModifica());
+
+					em.persist(objBandeja);
+				}
+			
+			}
+
+			if (opcion == 4) {
+
+				idSgteAct = bandeja.getBandejaPK().getIdActividad() + 1;
+				correlativo = bandeja.getBandejaPK().getCorrelativo() + 1;
+
+				bandeja.getBandejaPK().setIdActividad(idSgteAct);
+				bandeja.getBandejaPK().setCorrelativo(correlativo);
+
+				objBandeja = new Bandeja();
+				objBandeja = em.find(Bandeja.class, bandeja.getBandejaPK());
+
+				if (objBandeja.getEstado().equalsIgnoreCase("AT")) {
+					Flujo flujo = em.find(Flujo.class, bandeja.getBandejaPK()
+							.getIdFlujo());
+					flujo.setEstado("AT");
+					flujo.setFechaModificacion(new Date());
+					flujo.setUsuarioModifica(bandeja.getUsuarioModifica());
+
+					em.merge(flujo);
+
+				}
+			}
+
+			if (opcion == 5) {
+
+				idSgteAct = bandeja.getBandejaPK().getIdActividad() - 1;
+				correlativo = bandeja.getBandejaPK().getCorrelativo() - 1;
+
+				bandeja.getBandejaPK().setIdActividad(idSgteAct);
+				bandeja.getBandejaPK().setCorrelativo(correlativo);
+
+				objBandeja = new Bandeja();
+				objBandeja = em.find(Bandeja.class, bandeja.getBandejaPK());
+
+				if (objBandeja.getEstado().equalsIgnoreCase("AT")) {
+					Flujo flujo = em.find(Flujo.class, bandeja.getBandejaPK()
+							.getIdFlujo());
+					flujo.setEstado("AT");
+					flujo.setFechaModificacion(new Date());
+					flujo.setUsuarioModifica(bandeja.getUsuarioModifica());
+
+					em.merge(flujo);
+				}
+			}
+
+			resultado = true;
+		} catch (Exception e) {
+			resultado = false;
+			e.printStackTrace();
+			return resultado;
+		}
+		return resultado;
+	}
+
+	@Transactional
+	public boolean atenderCompuertaInclusiva(Bandeja paramBandeja, String opcion) {
+		boolean resultado = false;
+		Bandeja objBandeja = null;
+		BandejaPK bandejaPK = null;
+		Long idSgteAct = null;
+		Long correlativo = null;
+		try {
+
+			em.merge(paramBandeja);
+
+			idSgteAct = paramBandeja.getBandejaPK().getIdActividad() + 1;
+			correlativo = paramBandeja.getBandejaPK().getCorrelativo() + 1;
+
+			bandejaPK = new BandejaPK(paramBandeja.getBandejaPK().getIdFlujo(),
+					idSgteAct, paramBandeja.getBandejaPK().getIdProceso(),
+					correlativo);
+
+			objBandeja = new Bandeja();
+			objBandeja.setBandejaPK(bandejaPK);
+			objBandeja.setEstado("EE");
+			objBandeja.setFechaCreacion(new Date());
+			objBandeja.setUsuarioRegistra(paramBandeja.getUsuarioModifica());
+
+			em.persist(objBandeja);
+
+			if (opcion.equalsIgnoreCase("2")) {// NO
+
+				idSgteAct = 13L;
+				// correlativo = 64L;//cambiar si se agrega mas actividades
+				correlativo = 13L;
+
+				bandejaPK = new BandejaPK(paramBandeja.getBandejaPK()
+						.getIdFlujo(), idSgteAct, paramBandeja.getBandejaPK()
+						.getIdProceso(), correlativo);
+
+				objBandeja = new Bandeja();
+				objBandeja.setBandejaPK(bandejaPK);
+				objBandeja.setEstado("EE");
+				objBandeja.setFechaCreacion(new Date());
+				objBandeja
+						.setUsuarioRegistra(paramBandeja.getUsuarioModifica());
+
+				em.persist(objBandeja);
+
+			}
+
+			resultado = true;
+		} catch (Exception e) {
+			resultado = false;
+			e.printStackTrace();
+			return resultado;
+		}
+		return resultado;
+	}
+
+	@Transactional
+	public boolean atenderCompuertaExclusiva(Bandeja paramBandeja, String opcion) {
+		boolean resultado = false;
+		Bandeja objBandeja = null;
+		BandejaPK bandejaPK = null;
+		Long idSgteAct = null;
+		Long correlativo = null;
+		Long idSubProceso = null;
+		try {
+
+			em.merge(paramBandeja);
+
+			if (opcion.equalsIgnoreCase("1")) {// SI
+				idSgteAct = paramBandeja.getBandejaPK().getIdActividad() + 2;
+				correlativo = paramBandeja.getBandejaPK().getCorrelativo() + 1;
+
+				bandejaPK = new BandejaPK(paramBandeja.getBandejaPK()
+						.getIdFlujo(), idSgteAct, paramBandeja.getBandejaPK()
+						.getIdProceso(), correlativo);
+
+				objBandeja = new Bandeja();
+				objBandeja.setBandejaPK(bandejaPK);
+				objBandeja.setEstado("EE");
+				objBandeja.setFechaCreacion(new Date());
+				objBandeja
+						.setUsuarioRegistra(paramBandeja.getUsuarioModifica());
+
+				em.persist(objBandeja);
+			} else if (opcion.equalsIgnoreCase("2")) {// NO
+
+				idSgteAct = paramBandeja.getBandejaPK().getIdActividad() + 1L;
+				correlativo = paramBandeja.getBandejaPK().getCorrelativo() + 1L;
+
+				bandejaPK = new BandejaPK(paramBandeja.getBandejaPK()
+						.getIdFlujo(), idSgteAct, paramBandeja.getBandejaPK()
+						.getIdProceso(), correlativo);
+
+				objBandeja = new Bandeja();
+				objBandeja.setBandejaPK(bandejaPK);
+				objBandeja.setEstado("P");
+				objBandeja.setFechaCreacion(new Date());
+				objBandeja
+						.setUsuarioRegistra(paramBandeja.getUsuarioModifica());
+
+				em.persist(objBandeja);
+
+				idSubProceso = 3L;// Convenio
+				idSgteAct = 1L;// Primera actividad
+				correlativo += 1;
+
+				bandejaPK = new BandejaPK(paramBandeja.getBandejaPK()
+						.getIdFlujo(), idSgteAct, idSubProceso, correlativo);
+
+				objBandeja = new Bandeja();
+				objBandeja.setBandejaPK(bandejaPK);
+				objBandeja.setEstado("EE");
+				objBandeja.setFechaCreacion(new Date());
+				objBandeja
+						.setUsuarioRegistra(paramBandeja.getUsuarioModifica());
+
+				em.persist(objBandeja);
+
+			}
+
+			resultado = true;
+		} catch (Exception e) {
+			resultado = false;
+			e.printStackTrace();
+			return resultado;
+		}
+		return resultado;
+	}
+
+	@Transactional
+	public boolean atenderActividadNro12(Bandeja paramBandeja) {
+		boolean resultado = false;
+		Bandeja objBandeja = null;
+		BandejaPK bandejaPK = null;
+		Long idSgteAct = null;
+		Long correlativo = null;
+		try {
+
+			em.merge(paramBandeja);
+
+			idSgteAct = paramBandeja.getBandejaPK().getIdActividad() + 6;
+			correlativo = paramBandeja.getBandejaPK().getCorrelativo() + 1;
+
+			bandejaPK = new BandejaPK(paramBandeja.getBandejaPK().getIdFlujo(),
+					idSgteAct, paramBandeja.getBandejaPK().getIdProceso(),
+					correlativo);
+
+			objBandeja = new Bandeja();
+			objBandeja.setBandejaPK(bandejaPK);
+			objBandeja.setEstado("EE");
+			objBandeja.setFechaCreacion(new Date());
+			objBandeja.setUsuarioRegistra(paramBandeja.getUsuarioModifica());
+
+			em.persist(objBandeja);
+
+			resultado = true;
+		} catch (Exception e) {
+			resultado = false;
+			e.printStackTrace();
+			return resultado;
+		}
+		return resultado;
+	}
+
+	@Transactional
+	public boolean atenderActividadNro27y30(Bandeja paramBandeja,
+			Long paramIdActividad) {
+		boolean resultado = false;
+		Bandeja objBandeja = null;
+		BandejaPK bandejaPK = null;
+		Long idSgteAct = null;
+		Long idSubProceso = null;
+		Long correlativo = null;
+
+		try {
+
+			em.merge(paramBandeja);
+
+			idSgteAct = paramBandeja.getBandejaPK().getIdActividad() + 1L;
+			correlativo = paramBandeja.getBandejaPK().getCorrelativo() + 1L;
+
+			bandejaPK = new BandejaPK(paramBandeja.getBandejaPK().getIdFlujo(),
+					idSgteAct, paramBandeja.getBandejaPK().getIdProceso(),
+					correlativo);
+
+			objBandeja = new Bandeja();
+			objBandeja.setBandejaPK(bandejaPK);
+			objBandeja.setEstado("P");
+			objBandeja.setFechaCreacion(new Date());
+			objBandeja.setUsuarioRegistra(paramBandeja.getUsuarioModifica());
+
+			em.persist(objBandeja);
+
+			if (paramIdActividad == 27L || paramIdActividad == 16L) {
+				idSubProceso = 2L;// Resolucion
+			} else if (paramIdActividad == 30L) {
+				idSubProceso = 3L;// Convenio
+			}
+
+			idSgteAct = 1L;// Primera actividad
+			correlativo += 1;
+
+			bandejaPK = new BandejaPK(paramBandeja.getBandejaPK().getIdFlujo(),
+					idSgteAct, idSubProceso, correlativo);
+
+			objBandeja = new Bandeja();
+			objBandeja.setBandejaPK(bandejaPK);
+			objBandeja.setEstado("EE");
+			objBandeja.setFechaCreacion(new Date());
+			objBandeja.setUsuarioRegistra(paramBandeja.getUsuarioModifica());
+
+			em.persist(objBandeja);
+
+			resultado = true;
+		} catch (Exception e) {
+			resultado = false;
+			e.printStackTrace();
+			return resultado;
+		}
+		return resultado;
+	}
+
+	@Transactional
+	public boolean concluirFlujo(Bandeja paramBandeja) {
+		boolean resultado = false;
+		Bandeja objBandeja = null;
+		BandejaPK bandejaPK = null;
+		Long idSgteAct = null;
+		Long correlativo = null;
+		try {
+			em.merge(paramBandeja);
+
+			Flujo flujo = em.find(Flujo.class, paramBandeja.getBandejaPK()
+					.getIdFlujo());
+
+			if (flujo.getProceso().getIdProceso() == paramBandeja
+					.getBandejaPK().getIdProceso()) {
+				flujo.setEstado("AT");
+				flujo.setFechaModificacion(new Date());
+				flujo.setUsuarioModifica(paramBandeja.getUsuarioModifica());
+
+				em.merge(flujo);
+			} else if (flujo.getProceso().getIdProceso() == 1L) {
+
+				Bandeja bandeja = getBandejaPendiente(paramBandeja
+						.getBandejaPK().getIdFlujo(), 1L);
+
+				bandeja.setEstado("AT");
+				bandeja.setDescripcion("Atendido con exito");
+				bandeja.setFechaCreacion(new Date());
+				bandeja.setUsuarioModifica(paramBandeja.getUsuarioModifica());
+
+				em.merge(bandeja);
+
+				idSgteAct = bandeja.getBandejaPK().getIdActividad() + 1L;
+				correlativo = paramBandeja.getBandejaPK().getCorrelativo() + 1L;
+
+				bandejaPK = new BandejaPK(paramBandeja.getBandejaPK()
+						.getIdFlujo(), idSgteAct, 1L, correlativo);
+
+				objBandeja = new Bandeja();
+				objBandeja.setBandejaPK(bandejaPK);
+				objBandeja.setEstado("EE");
+				objBandeja.setFechaCreacion(new Date());
+				objBandeja
+						.setUsuarioRegistra(paramBandeja.getUsuarioModifica());
+
+				em.persist(objBandeja);
+
+			}
+
+			resultado = true;
+		} catch (Exception e) {
+			resultado = false;
+			e.printStackTrace();
+			return resultado;
+		}
+		return resultado;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Bandeja> getListaBandeja() {
+		Query q = (Query) em
+				.createQuery("select b from Bandeja b where b.estado =:estado");
+		q.setParameter("estado", "A");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA BANDEJA VACIO");
+			return null;
+		}
+	}
+
+	public List<Bandeja> getListaBandeja(Long idFlujol) {
+		Query q = (Query) em
+				.createQuery("select b from Bandeja b where b.bandejaPK.idFlujo =:idFlujo order by b.bandejaPK.correlativo Desc ");
+		q.setParameter("idFlujo", idFlujol);
+
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA BANDEJA VACIO");
+			return null;
+		}
+	}
+
+	@Transactional
+	public Bandeja getBandejaPendiente(Long idFlujo, Long idProceso) {
+		Query q = (Query) em
+				.createQuery("select b from Bandeja b where b.bandejaPK.idFlujo =:idFlujo and b.bandejaPK.idProceso =:idProceso and b.estado =:estado");
+		q.setParameter("idFlujo", idFlujo);
+		q.setParameter("idProceso", idProceso);
+		q.setParameter("estado", "P");
+
+		try {
+			return (Bandeja) q.getSingleResult();
+		} catch (Exception as) {
+			System.out.println("LISTA BANDEJA VACIO");
+			return null;
+		}
+	}
+
+	@Transactional
+	public Bandeja getBandeja(Long idFlujo, Long idProceso, Long idActividad) {
+		Query q = (Query) em
+				.createQuery("select b from Bandeja b where b.bandejaPK.idFlujo =:idFlujo and b.bandejaPK.idProceso =:idProceso and b.bandejaPK.idActividad =:idActividad ");
+		q.setParameter("idFlujo", idFlujo);
+		q.setParameter("idProceso", idProceso);
+		q.setParameter("idActividad", idActividad);
+
+		try {
+			return (Bandeja) q.getSingleResult();
+		} catch (Exception as) {
+			System.out.println("LISTA BANDEJA VACIO");
+			return null;
+		}
+	}
+
+	public Bandeja getBandejaDetalle(BandejaPK id) {
+		Query q = (Query) em
+				.createQuery("select b.bandejaPK, b.flujo.entidadDestino.id_ed, b.flujo.entidadDestino.desc_ed, b.flujo.puestoTipo.idPuesto, b.flujo.puestoTipo.nombre, b.flujo.proceso.idProceso, b.flujo.proceso.nombre, "
+						+ "b.flujo.gerentePublico.cod_gerente, b.flujo.gerentePublico.nombres, b.actividad.nombre, b.actividad.descripcion from Bandeja b "
+						+ "where b.bandejaPK.idFlujo =:idFlujo and b.bandejaPK.idProceso =:idProceso and b.bandejaPK.idActividad =:idActividad and b.bandejaPK.correlativo =:correlativo ");
+		q.setParameter("idFlujo", id.getIdFlujo());
+		q.setParameter("idProceso", id.getIdProceso());
+		q.setParameter("idActividad", id.getIdActividad());
+		q.setParameter("correlativo", id.getCorrelativo());
+
+		try {
+
+			List<Object[]> listaObjetos = new ArrayList<Object[]>();
+
+			listaObjetos = q.getResultList();
+
+			List<Bandeja> listaBandeja = new ArrayList<Bandeja>();
+			Bandeja bandejaSelec = new Bandeja();
+
+			for (Object[] row : listaObjetos) {
+
+				Bandeja bandeja = new Bandeja();
+				bandeja.setBandejaPK((BandejaPK) row[0]);
+
+				EntidadDestino entidadDestino = new EntidadDestino();
+				entidadDestino.setId_ed((Long) row[1]);
+				entidadDestino.setDesc_ed((String) row[2]);
+
+				PuestoTipo puestoTipo = new PuestoTipo();
+				puestoTipo.setIdPuesto((Long) row[3]);
+				puestoTipo.setNombre((String) row[4]);
+
+				Proceso proceso = new Proceso();
+				puestoTipo.setIdPuesto((Long) row[5]);
+				puestoTipo.setNombre((String) row[6]);
+
+				GerentePublico gerentePublico = new GerentePublico();
+				gerentePublico.setCod_gerente((String) row[7]);
+				gerentePublico.setNombres((String) row[8]);
+
+				Actividad actividad = new Actividad();
+				actividad.setId(new ActividadPK(bandeja.getBandejaPK()
+						.getIdActividad(), bandeja.getBandejaPK()
+						.getIdProceso()));
+				actividad.setNombre((String) row[9]);
+				actividad.setDescripcion((String) row[10]);
+
+				actividad.setProceso(proceso);
+
+				Flujo flujo = new Flujo();
+
+				flujo.setIdFlujo(bandeja.getBandejaPK().getIdFlujo());
+				flujo.setProceso(proceso);
+				flujo.setPuestoTipo(puestoTipo);
+				flujo.setGerentePublico(gerentePublico);
+				flujo.setEntidadDestino(entidadDestino);
+
+				bandeja.setActividad(actividad);
+				bandeja.setFlujo(flujo);
+
+				listaBandeja.add(bandeja);
+
+			}
+			
+			bandejaSelec = listaBandeja.get(0);
+
+			return bandejaSelec;
+		} catch (Exception as) {
+			as.printStackTrace();
+			return null;
+		}
+	}
+
+	public Long getMaxCorrelativoBandeja() {
+		try {
+			return (Long) em.createQuery(
+					"select max(b.bandejaPK.correlativo) from Bandeja b")
+					.getSingleResult() + 1L;
+		} catch (Exception e) {
+
+		}
+		return 1L;
+	}
+
+	public int getTotalManufacturers(Long idFlujo) {
+		Query q = (Query) em
+				.createQuery("select b from Bandeja b where b.bandejaPK.idFlujo =:idFlujo ");
+		q.setParameter("idFlujo", idFlujo);
+		try {
+			return q.getResultList().size();
+		} catch (Exception e) {
+			return 0;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Bandeja> getFindManufacturers(final int firstRow,
+			final int max, Long idFlujo) {
+
+		Query q = (Query) em
+				.createQuery("select b from Bandeja b where b.bandejaPK.idFlujo =:idFlujo ORDER BY b.bandejaPK.correlativo");
+		q.setParameter("idFlujo", idFlujo);
+		try {
+			return q.setFirstResult(firstRow).setMaxResults(max)
+					.getResultList();
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+}

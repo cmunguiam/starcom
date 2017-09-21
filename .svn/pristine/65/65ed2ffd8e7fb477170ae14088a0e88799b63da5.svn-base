@@ -1,0 +1,25 @@
+package gob.servir.workflow.dao;
+
+import gob.servir.workflow.model.ItemMenu;
+import gob.servir.workflow.model.Permiso;
+import gob.servir.workflow.model.Rol;
+
+import java.util.List;
+
+public interface PermisoDao {
+	
+	public abstract Permiso find(Long id);
+	
+	public abstract Permiso save(Permiso obj);
+	
+	public abstract List<Permiso> getListaPermiso();
+	
+	public abstract List<Permiso> getListaPermiso(Long idRol);
+	
+	public abstract List<Permiso> getListaPermiso(Long idMenu, Long idRol);
+	
+	public abstract Long getIdMax();
+	
+	public abstract void save(Rol rol, List<ItemMenu> listItemSelec, List<ItemMenu> listItemMenu);
+
+}

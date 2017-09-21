@@ -1,0 +1,1014 @@
+package gob.servir.workflow.controller;
+
+import gob.servir.workflow.dao.ActividadDao;
+import gob.servir.workflow.dao.BandejaDao;
+import gob.servir.workflow.dao.DocumentoDao;
+import gob.servir.workflow.dao.EntidadDestinoDao;
+import gob.servir.workflow.dao.FlujoDao;
+import gob.servir.workflow.dao.GerentePublicoDao;
+import gob.servir.workflow.dao.ProcesoDao;
+import gob.servir.workflow.dao.PuestoTipoDao;
+import gob.servir.workflow.dao.TipoDocumentoDao;
+import gob.servir.workflow.model.Bandeja;
+import gob.servir.workflow.model.BandejaPK;
+import gob.servir.workflow.model.Documento;
+import gob.servir.workflow.model.EntidadDestino;
+import gob.servir.workflow.model.Flujo;
+import gob.servir.workflow.model.GerentePublico;
+import gob.servir.workflow.model.TipoDocumento;
+import gob.servir.workflow.model.Usuario;
+import gob.servir.workflow.util.Archivo;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
+
+import org.primefaces.event.FileUploadEvent;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
+import org.primefaces.model.UploadedFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component("flujoController")
+@Scope("session")
+public class FlujoController implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(FlujoController.class);
+
+	@Autowired
+	private TipoDocumentoDao tipoDocumentoDao;
+	private Long tipoDocSelec = 0L;
+	private TipoDocumento tipoDocumentoSelec = null;
+	private List<SelectItem> comboTipoDoc = new ArrayList<SelectItem>();
+	private List<TipoDocumento> listaTipoDocumento = new ArrayList<TipoDocumento>();
+	private List<Documento> listaDetalleBandeja = new ArrayList<Documento>();
+	private List<Documento> listaDetalleBandeja2 = new ArrayList<Documento>();
+	private List<SelectItem> comboEstado = new ArrayList<SelectItem>();
+
+	@Autowired
+	private DocumentoDao detalleBandejaDao;
+	private Documento nuevo = new Documento();
+	private Documento modifica = new Documento();
+	private Documento detalleFlujoSelec = null;
+
+	@Autowired
+	private ProcesoDao procesoDao;
+	private List<SelectItem> comboProceso = new ArrayList<SelectItem>();
+	private Long procesoSelec = 0L;
+
+	@Autowired
+	private PuestoTipoDao puestoDao;
+	private List<SelectItem> comboPuesto = new ArrayList<SelectItem>();
+	private Long puestoSelec = 0L;
+
+	@Autowired
+	private EntidadDestinoDao entidadDestinoDao;
+	private String entidadBusc = "";
+	private List<EntidadDestino> listaEntidadTipo = new ArrayList<EntidadDestino>();
+	private List<SelectItem> comboEntidadDestino = new ArrayList<SelectItem>();
+	private Long entidadDestinoSelec = 0L;
+	private EntidadDestino entidadDestinoSelect = null;
+
+	@Autowired
+	private GerentePublicoDao gerentePublicoDao;
+	private String gerenteBusc = "";
+	private List<GerentePublico> listaGerentePublico = new ArrayList<GerentePublico>();
+	private GerentePublico gerentePublicoSelect = null;
+
+	@Autowired
+	private ActividadDao actividadDao;
+
+	@Autowired
+	private BandejaDao bandejaDao;
+	private Bandeja bandeja = new Bandeja();
+
+	List<EntidadDestino> listEntidadDestino = new ArrayList<EntidadDestino>();
+
+	@Autowired
+	private FlujoDao flujoDao;
+	private Long idFlujo = 0L;
+	private Flujo nuevoFlujo = new Flujo();
+	private Flujo nuevoFlujoEditar = null;
+	private List<Flujo> listaFlujo = new ArrayList<Flujo>();
+
+	private Usuario userSesion = null;
+	private Boolean flagFlujo = true;
+	private Boolean flagDetalleBandeja = true;
+	private Boolean flagDetalleBandejaTemp = true;
+	private Boolean estadoComboProceso = false;
+	private Boolean modificarDoc = false;
+
+	private String fileName = "";
+	private StreamedContent file3;
+	private byte[] rawFile = null;
+	private FacesMessage msg = null;
+
+	private int detalleFlujoIndex = 0;
+	private String numTemp = "";
+	private String msgDoc = "";
+
+	public FlujoController() {
+
+	}
+
+	public String getMsgDoc() {
+		return msgDoc;
+	}
+
+	public void setMsgDoc(String msgDoc) {
+		this.msgDoc = msgDoc;
+	}
+
+	public int getDetalleBandejaIndex() {
+		return detalleFlujoIndex;
+	}
+
+	public void setDetalleBandejaIndex(int detalleFlujoIndex) {
+		this.detalleFlujoIndex = detalleFlujoIndex;
+	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
+	public Boolean getModificarDoc() {
+		return modificarDoc;
+	}
+
+	public void setModificarDoc(Boolean modificarDoc) {
+		this.modificarDoc = modificarDoc;
+	}
+
+	public String getNumTemp() {
+		return numTemp;
+	}
+
+	public void setNumTemp(String numTemp) {
+		this.numTemp = numTemp;
+	}
+
+	public void setFile3(StreamedContent file3) {
+		this.file3 = file3;
+	}
+
+	public Boolean getFlagDetalleBandejaTemp() {
+		return flagDetalleBandejaTemp;
+	}
+
+	public void setFlagDetalleBandejaTemp(Boolean flagDetalleBandejaTemp) {
+		this.flagDetalleBandejaTemp = flagDetalleBandejaTemp;
+	}
+
+	public List<Documento> getListaDetalleBandeja2() {
+		return listaDetalleBandeja2;
+	}
+
+	public void setListaDetalleBandeja2(List<Documento> listaDetalleBandeja2) {
+		this.listaDetalleBandeja2 = listaDetalleBandeja2;
+	}
+
+	public StreamedContent getFile3() {
+
+		if (nuevo == null) {
+			return null;
+		}
+
+		rawFile = nuevo.getDocBlob();
+		String extension = nuevo.getUrlDocumento().substring(
+				nuevo.getUrlDocumento().lastIndexOf(".") + 1);
+
+		ByteArrayInputStream bai = new ByteArrayInputStream(rawFile);
+
+		InputStream stream = bai;
+		file3 = new DefaultStreamedContent(stream, "application/" + extension,
+				nuevo.getUrlDocumento());
+		return file3;
+	}
+
+	public byte[] getRawFile() {
+		return rawFile;
+	}
+
+	public void setRawFile(byte[] rawFile) {
+		this.rawFile = rawFile;
+	}
+
+	public Boolean getFlagFlujo() {
+		return flagFlujo;
+	}
+
+	public void setFlagFlujo(Boolean flagFlujo) {
+		this.flagFlujo = flagFlujo;
+	}
+
+	public Boolean getEstadoComboProceso() {
+		return estadoComboProceso;
+	}
+
+	public void setEstadoComboProceso(Boolean estadoComboProceso) {
+		this.estadoComboProceso = estadoComboProceso;
+	}
+
+	public Boolean getFlagDetalleBandeja() {
+		return flagDetalleBandeja;
+	}
+
+	public void setFlagDetalleBandeja(Boolean flagDetalleBandeja) {
+		this.flagDetalleBandeja = flagDetalleBandeja;
+	}
+
+	public void generarIdFLujo() {
+		try {
+			nuevoFlujo = flujoDao.finfIdFlujo();
+
+			if (nuevoFlujo == null)
+				idFlujo = 1L;
+			else {
+				idFlujo = nuevoFlujo.getIdFlujo() + 1L;
+			}
+
+		} catch (Exception as) {
+			as.printStackTrace();
+			idFlujo = 0L;
+
+		}
+
+	}
+
+	public Long getIdFlujo() {
+
+		Date now = new Date();
+		SimpleDateFormat format = new SimpleDateFormat("yyyy");
+
+		if (nuevoFlujoEditar == null)
+			generarIdFLujo();
+		else {
+
+			return Long.parseLong(""
+					+ Long.parseLong(format.format((nuevoFlujoEditar
+							.getFechaCreacion()))) + idFlujo);
+		}
+
+		return Long
+				.parseLong("" + Long.parseLong(format.format(now)) + idFlujo);
+	}
+
+	public void setIdFlujo(Long idFlujo) {
+		this.idFlujo = idFlujo;
+	}
+
+	public Flujo getNuevoFlujo() {
+		return nuevoFlujo;
+	}
+
+	public void setNuevoFlujo(Flujo nuevoFlujo) {
+		this.nuevoFlujo = nuevoFlujo;
+	}
+
+	public Flujo getNuevoFlujoEditar() {
+		return nuevoFlujoEditar;
+	}
+
+	public void setNuevoFlujoEditar(Flujo nuevoFlujoEditar) {
+		this.nuevoFlujoEditar = nuevoFlujoEditar;
+	}
+
+	public List<Flujo> getListaFlujo() {
+		listaFlujo = flujoDao.getListaFlujoPendientes();
+		return listaFlujo;
+	}
+
+	public void setListaFlujo(List<Flujo> listaFlujo) {
+		this.listaFlujo = listaFlujo;
+	}
+
+	public GerentePublico getGerentePublicoSelect() {
+		return gerentePublicoSelect;
+	}
+
+	public void setGerentePublicoSelect(GerentePublico gerentePublicoSelect) {
+		this.gerentePublicoSelect = gerentePublicoSelect;
+	}
+
+	public List<GerentePublico> getListaGerentePublico() {
+
+		if (gerenteBusc.equalsIgnoreCase(""))
+			listaGerentePublico = gerentePublicoDao.getListaGerentePublico();
+		return listaGerentePublico;
+	}
+
+	public void setListaGerentePublico(List<GerentePublico> listaGerentePublico) {
+		this.listaGerentePublico = listaGerentePublico;
+	}
+
+	public String getGerenteBusc() {
+		return gerenteBusc;
+	}
+
+	public void setGerenteBusc(String gerenteBusc) {
+		this.gerenteBusc = gerenteBusc;
+	}
+
+	public EntidadDestino getEntidadDestinoSelect() {
+		return entidadDestinoSelect;
+	}
+
+	public void setEntidadDestinoSelect(EntidadDestino entidadDestinoSelect) {
+		this.entidadDestinoSelect = entidadDestinoSelect;
+	}
+
+	public String getEntidadBusc() {
+		return entidadBusc;
+	}
+
+	public void setEntidadBusc(String entidadBusc) {
+		this.entidadBusc = entidadBusc;
+	}
+
+	public List<EntidadDestino> getListaEntidadTipo() {
+
+		if (entidadBusc.equalsIgnoreCase(""))
+			listaEntidadTipo = entidadDestinoDao.getListaEntidad();
+		return listaEntidadTipo;
+	}
+
+	public void setListaEntidadTipo(List<EntidadDestino> listaEntidadTipo) {
+
+		this.listaEntidadTipo = listaEntidadTipo;
+	}
+
+	public List<SelectItem> getComboProceso() {
+		comboProceso = procesoDao.getComboProcesoFlujo();
+		return comboProceso;
+	}
+
+	public void setComboProceso(List<SelectItem> comboProceso) {
+		this.comboProceso = comboProceso;
+	}
+
+	public Long getEntidadDestinoSelec() {
+		return entidadDestinoSelec;
+	}
+
+	public void setEntidadDestinoSelec(Long entidadDestinoSelec) {
+		this.entidadDestinoSelec = entidadDestinoSelec;
+	}
+
+	public List<SelectItem> getComboEntidadDestino() {
+		comboEntidadDestino = entidadDestinoDao.getComboEntidad();
+		return comboEntidadDestino;
+	}
+
+	public void setComboEntidadDestino(List<SelectItem> comboEntidadDestino) {
+		this.comboEntidadDestino = comboEntidadDestino;
+	}
+
+	public Long getPuestoSelec() {
+		return puestoSelec;
+	}
+
+	public void setPuestoSelec(Long puestoSelec) {
+		this.puestoSelec = puestoSelec;
+	}
+
+	public Long getProcesoSelec() {
+		return procesoSelec;
+	}
+
+	public void setProcesoSelec(Long procesoSelec) {
+		this.procesoSelec = procesoSelec;
+	}
+
+	public List<SelectItem> getComboPuesto() {
+		comboPuesto = puestoDao.getComboPuesto();
+		return comboPuesto;
+	}
+
+	public void setComboPuesto(List<SelectItem> comboPuesto) {
+		this.comboPuesto = comboPuesto;
+	}
+
+	public void limpiar() {
+		nuevo = new Documento();
+		modifica = new Documento();
+		nuevoFlujo = new Flujo();
+		tipoDocSelec = 0L;
+		procesoSelec = 0L;
+		puestoSelec = 0L;
+		entidadDestinoSelec = 0L;
+		entidadDestinoSelect = null;
+		gerentePublicoSelect = null;
+		listaTipoDocumento = new ArrayList<TipoDocumento>();
+		listaDetalleBandeja = new ArrayList<Documento>();
+		flagFlujo = true;
+		flagDetalleBandeja = true;
+		estadoComboProceso = false;
+		generarIdFLujo();
+		fileName = "";
+		rawFile = null;
+		msgDoc = "";
+
+	}
+
+	public void limpiarDetalleBandeja() {
+		numTemp = "";
+		nuevo = new Documento();
+		modifica = new Documento();
+		tipoDocSelec = 0L;
+		tipoDocumentoSelec = new TipoDocumento();
+		fileName = "";
+		rawFile = null;
+		msgDoc = "";
+		flagDetalleBandeja = true;
+
+	}
+
+	public Long getTipoDocSelec() {
+		return tipoDocSelec;
+	}
+
+	public void setTipoDocSelec(Long tipoDocSelec) {
+		this.tipoDocSelec = tipoDocSelec;
+	}
+
+	public List<SelectItem> getComboTipoDoc() {
+		comboTipoDoc = tipoDocumentoDao.getComboTipoDocumento();
+		return comboTipoDoc;
+	}
+
+	public void setComboTipoDoc(List<SelectItem> comboTipoDoc) {
+		this.comboTipoDoc = comboTipoDoc;
+	}
+
+	public TipoDocumento getTipoDocumentoSelec() {
+		return tipoDocumentoSelec;
+	}
+
+	public void setTipoDocumentoSelec(TipoDocumento tipoDocumentoSelec) {
+		this.tipoDocumentoSelec = tipoDocumentoSelec;
+	}
+
+	public List<TipoDocumento> getListaTipoDocumento() {
+
+		return listaTipoDocumento;
+	}
+
+	public void setListaTipoDocumento(List<TipoDocumento> listaTipoDocumento) {
+		this.listaTipoDocumento = listaTipoDocumento;
+	}
+
+	public Documento getNuevo() {
+		return nuevo;
+	}
+
+	public void setNuevo(Documento nuevo) {
+		this.nuevo = nuevo;
+	}
+
+	public Documento getModifica() {
+		return modifica;
+	}
+
+	public void setModifica(Documento modifica) {
+		this.modifica = modifica;
+	}
+
+	public Documento getDetalleBandejaSelec() {
+		return detalleFlujoSelec;
+	}
+
+	public void setDetalleBandejaSelec(Documento detalleFlujoSelec) {
+		this.detalleFlujoSelec = detalleFlujoSelec;
+	}
+
+	public List<SelectItem> getComboEstado() {
+		comboEstado = new ArrayList<SelectItem>();
+		SelectItem item = null;
+		item = new SelectItem("A", "Activo");
+		comboEstado.add(item);
+		item = new SelectItem("E", "Inactivo");
+		comboEstado.add(item);
+
+		return comboEstado;
+	}
+
+	public void setComboEstado(List<SelectItem> comboEstado) {
+		this.comboEstado = comboEstado;
+	}
+
+	public void agregar() {
+		validarSesion();
+
+		logger.info("Metodo guardar Tipo de Documento");
+		TipoDocumento tipoDoc = null;
+		msgDoc = "";
+
+		if (validarDocumentosAdjuntos()) {
+			try {
+
+				if (listaDetalleBandeja == null) {
+					listaDetalleBandeja = new ArrayList<Documento>();
+				}
+
+				tipoDoc = tipoDocumentoDao.find(tipoDocSelec);
+
+				long i[] = new long[100];
+				List<Integer> listDet = new ArrayList<Integer>();
+
+				nuevo.setTipoDocumento(tipoDoc);
+
+				if (flagFlujo) {
+
+					nuevo.setUrlDocumento(fileName);
+					nuevo.setDocBlob(rawFile);
+
+					if (flagDetalleBandeja) {
+
+						listaDetalleBandeja.add(nuevo);
+						listDet.add(listaDetalleBandeja.hashCode());
+					} else {
+						for (Documento lista : listaDetalleBandeja) {
+							for (int z = 0; z < listDet.size(); z++) {
+
+								if (listaDetalleBandeja.hashCode() == i[z]) {
+									listaDetalleBandeja.set(z, nuevo);
+								}
+							}
+							flagDetalleBandeja = true;
+						}
+					}
+
+				} else {
+
+					if (!flagDetalleBandeja) {
+						nuevo.setFechaModificacion(new Date());
+						nuevo.setUsuarioModifica(userSesion.getUsuario());
+						if (!(fileName.equalsIgnoreCase(""))) {
+							nuevo.setUrlDocumento(fileName);
+							nuevo.setDocBlob(rawFile);
+						}
+
+						detalleBandejaDao.edit(nuevo);
+
+						flagDetalleBandeja = true;
+						limpiarDetalleBandeja();
+						this.listaDetalleBandeja = detalleBandejaDao
+								.getListFlujo(idFlujo);
+
+					} else {
+						Documento nuevoD = new Documento();
+						nuevoD.setIdDetalle(detalleBandejaDao.getIdMax());
+						nuevoD.setTipoDocumento(tipoDoc);
+						nuevoD.setNroDoc(nuevo.getNroDoc());
+						nuevoD.setDescripcion(nuevo.getDescripcion());
+						nuevoD.setFechaEmision(nuevo.getFechaEmision());
+						nuevoD.setUsuarioRegistra(userSesion.getUsuario());
+						nuevoD.setFechaCreacion(new Date());
+						nuevoD.setUrlDocumento(fileName);
+						nuevoD.setDocBlob(rawFile);
+						nuevoD.setEstado("A");
+
+						BandejaPK id = new BandejaPK(idFlujo, 0L, procesoSelec,
+								0L);
+						bandeja = new Bandeja();
+						bandeja.setBandejaPK(id);
+						nuevoD.setBandeja(bandeja);
+						detalleBandejaDao.save(nuevoD);
+						listaDetalleBandeja.add(nuevoD);
+					}
+
+				}
+				if (!modificarDoc)
+					FacesContext.getCurrentInstance().addMessage(
+							null,
+							new FacesMessage(FacesMessage.SEVERITY_INFO,
+									"EXITO", "Se Adjunto Documento"));
+				else {
+					FacesContext.getCurrentInstance().addMessage(
+							null,
+							new FacesMessage(FacesMessage.SEVERITY_INFO,
+									"EXITO", "Se Actualizo Documento"));
+					modificarDoc = false;
+				}
+
+				nuevo = new Documento();
+				limpiarDetalleBandeja();
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				FacesContext.getCurrentInstance().addMessage(
+						null,
+						new FacesMessage(FacesMessage.SEVERITY_WARN, "Error",
+								"Adjuntar Documento"));
+			}
+
+		} else {
+			if (!numTemp.equalsIgnoreCase(""))
+				nuevo.setNroDoc(numTemp);
+		}
+
+	}
+
+	public void modificar() {
+		validarSesion();
+		try {
+			if (modifica != null) {
+				modifica.setFechaModificacion(new Date());
+				modifica.setUsuarioModifica(userSesion.getUsuario());
+				detalleBandejaDao.edit(modifica);
+				FacesContext.getCurrentInstance().addMessage(
+						null,
+						new FacesMessage(FacesMessage.SEVERITY_INFO,
+								"Tipo Documento", "modificado con exito"));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error",
+							"al modificar registro"));
+		}
+	}
+
+	public void eliminar() {
+
+		try {
+			if (detalleFlujoSelec != null) {
+				detalleFlujoSelec.setEstado("E");
+				detalleBandejaDao.edit(detalleFlujoSelec);
+				FacesContext.getCurrentInstance().addMessage(
+						null,
+						new FacesMessage(FacesMessage.SEVERITY_INFO,
+								"Tipo Documento", "eliminado con exito"));
+			}
+			limpiarDetalleBandeja();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error",
+							"al eliminar registro"));
+		}
+	}
+
+	public List<Documento> getListaDetalleBandeja() {
+		return listaDetalleBandeja;
+	}
+
+	public void setListaDetalleBandeja(List<Documento> listaDetalleBandeja) {
+		this.listaDetalleBandeja = listaDetalleBandeja;
+	}
+
+	public void eliminarDoc(Documento obj) {
+		Documento borrar = null;
+		Iterator<Documento> itera = this.listaDetalleBandeja.iterator();
+
+		try {
+			while (itera.hasNext()) {
+				Documento detalle = itera.next();
+				if (detalle.getTipoDocumento().getIdTipoDocumento()
+						.equals(obj.getTipoDocumento().getIdTipoDocumento())) {
+					borrar = detalle;
+					break;
+				}
+			}
+			if (borrar != null)
+				this.listaDetalleBandeja.remove(borrar);
+			if (!flagFlujo) {
+				borrar = obj;
+				borrar.setEstado("E");
+				detalleBandejaDao.edit(borrar);
+				this.listaDetalleBandeja = detalleBandejaDao
+						.getListFlujo(idFlujo);
+
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public void editarDoc(Documento obj) {
+		modificarDoc = true;
+		detalleFlujoIndex = listaDetalleBandeja.lastIndexOf(obj);
+		flagDetalleBandeja = false;
+		nuevo = obj;
+		numTemp = obj.getNroDoc();
+
+		fileName = nuevo.getUrlDocumento();
+		rawFile = nuevo.getDocBlob();
+		tipoDocSelec = obj.getTipoDocumento().getIdTipoDocumento();
+
+	}
+
+	public void buscarEntidad() {
+		try {
+
+			listaEntidadTipo = entidadDestinoDao.buscarNombre(entidadBusc);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+
+		}
+	}
+
+	public void buscarGerente() {
+		try {
+
+			listaGerentePublico = gerentePublicoDao
+					.buscarNombreDni(gerenteBusc);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+
+		}
+	}
+
+	public boolean validarDatos() {
+		if (entidadDestinoSelect.getDesc_ed() == null) {
+
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN,
+							"Es necesario", "Seleccione Entidad"));
+
+			return false;
+		}
+
+		if (puestoSelec == 0L) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN,
+							"Es necesario", "Seleccione Puesto"));
+			return false;
+		}
+
+		if (procesoSelec == 0L) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN,
+							"Es necesario", "Seleccione Proceso"));
+			return false;
+		}
+
+		if (listaDetalleBandeja.size() < 1) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN,
+							"Es necesario", "Adjunte al menos un documento"));
+
+			return false;
+		}
+
+		return true;
+
+	}
+
+	public boolean validarDocumentosAdjuntos() {
+		if (tipoDocSelec == 0L) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+							"Seleccione Tipo Documento"));
+
+			return false;
+		}
+
+		if (nuevo.getNroDoc().trim().equalsIgnoreCase("")) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+							"Ingrese Nro de documento"));
+
+			return false;
+		}
+
+		if (validarNroDoc()) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+							"Número de Documento ya existe."));
+			return false;
+		}
+
+		if (nuevo.getFechaEmision() == null) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+							"Seleccione Fecha de Documento"));
+
+			return false;
+		}
+
+		if (fileName == "" || rawFile == null) {
+			msg = new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+					"Adjunte documento.");
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+			return false;
+		}
+
+		return true;
+
+	}
+
+	private boolean validarNroDoc() {
+		boolean sw = false;
+		for (int i = 0; i < listaDetalleBandeja.size(); i++) {
+			if (listaDetalleBandeja.get(i).getNroDoc()
+					.equalsIgnoreCase(nuevo.getNroDoc())) {
+
+				sw = true;
+				if (!flagDetalleBandeja)
+					if (detalleFlujoIndex == i)
+						if (listaDetalleBandeja.get(detalleFlujoIndex)
+								.getNroDoc()
+								.equalsIgnoreCase(nuevo.getNroDoc())) {
+							sw = false;
+						}
+
+				if (sw)
+					break;
+
+			} else
+				sw = false;
+
+		}
+
+		return sw;
+	}
+
+	public void guardarFlujo() {
+		logger.info("Metodo guardar Flujo");
+		validarSesion();
+
+		if (validarDatos()) {
+
+			try {
+
+				if (flagFlujo) {
+					Flujo nuevoFlujo2 = new Flujo();
+
+					if (gerentePublicoSelect != null)
+						nuevoFlujo2.setGerentePublico(gerentePublicoSelect);
+
+					if (entidadDestinoSelect != null)
+						nuevoFlujo2.setEntidadDestino(entidadDestinoSelect);
+
+					nuevoFlujo2.setEstado("P");
+
+					nuevoFlujo2.setIdFlujo(idFlujo);
+					nuevoFlujo2.setPuestoTipo(puestoDao.find(puestoSelec));
+					nuevoFlujo2.setProceso(procesoDao.find(procesoSelec));
+					nuevoFlujo2.setUsuarioRegistra(userSesion.getUsuario());
+					nuevoFlujo2.setFechaCreacion(new Date());
+
+					BandejaPK id = new BandejaPK(idFlujo, 0L, procesoSelec, 0L);
+					bandeja = new Bandeja();
+					bandeja.setBandejaPK(id);
+					bandeja.setEstado("AT");
+					bandeja.setFechaCreacion(new Date());
+					bandeja.setUsuarioRegistra(userSesion.getUsuario());
+					bandeja.setFechaModificacion(new Date());
+					bandeja.setUsuarioModifica(userSesion.getUsuario());
+
+					flujoDao.saveTotal(nuevoFlujo2, bandeja,
+							listaDetalleBandeja);
+
+					FacesContext.getCurrentInstance().addMessage(
+							null,
+							new FacesMessage(FacesMessage.SEVERITY_INFO,
+									"EXITO", "Flujo fue creado con exito"));
+					limpiar();
+					generarIdFLujo();
+
+				} else {
+
+					if (gerentePublicoSelect != null)
+						nuevoFlujoEditar
+								.setGerentePublico(gerentePublicoSelect);
+
+					if (entidadDestinoSelect != null)
+						nuevoFlujoEditar
+								.setEntidadDestino(entidadDestinoSelect);
+
+					nuevoFlujoEditar.setPuestoTipo(puestoDao.find(puestoSelec));
+					nuevoFlujoEditar
+							.setUsuarioModifica(userSesion.getUsuario());
+					nuevoFlujoEditar.setFechaModificacion(new Date());
+					flujoDao.update(nuevoFlujoEditar);
+
+					FacesContext.getCurrentInstance().addMessage(
+							null,
+							new FacesMessage(FacesMessage.SEVERITY_INFO,
+									"Flujo", "registro exitoso"));
+					limpiar();
+					generarIdFLujo();
+
+				}
+			} catch (Exception e) {
+
+				e.printStackTrace();
+				FacesContext.getCurrentInstance().addMessage(
+						null,
+						new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error",
+								"al guardar Flujo"));
+			}
+
+		}
+
+	}
+
+	public void validarSesion() {
+		FacesContext context = FacesContext.getCurrentInstance();
+		userSesion = (Usuario) context.getExternalContext().getSessionMap()
+				.get("userSesion");
+
+		if (userSesion == null) {
+			String ctxPath = context.getExternalContext()
+					.getRequestContextPath();
+			try {
+				context.getExternalContext().redirect(ctxPath + "/login.jsf");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void editarFlujo(Flujo editFlujo) {
+		estadoComboProceso = true;
+		flagFlujo = false;
+		nuevoFlujoEditar = editFlujo;
+		setIdFlujo(editFlujo.getIdFlujo());
+		entidadDestinoSelect = entidadDestinoDao.find(editFlujo
+				.getEntidadDestino().getId_ed());
+		if (editFlujo.getGerentePublico() != null)
+			gerentePublicoSelect = gerentePublicoDao.find(editFlujo
+					.getGerentePublico().getCod_gerente());
+		else {
+			gerentePublicoSelect = null;
+		}
+		puestoSelec = nuevoFlujoEditar.getPuestoTipo().getIdPuesto();
+		procesoSelec = nuevoFlujoEditar.getProceso().getIdProceso();
+		listaDetalleBandeja = detalleBandejaDao.getListFlujo(editFlujo
+				.getIdFlujo());
+		limpiarDetalleBandeja();
+
+	}
+
+	public Date getMaxdate() {
+		Date now = new Date();
+		return now;
+	}
+
+	public void handleFileUpload(FileUploadEvent event) {
+		Archivo archivo = new Archivo();
+		msgDoc = "";
+		try {
+
+			UploadedFile fu = event.getFile();
+			fileName = fu.getFileName();
+			File file = new File(archivo.obtieneRuta(), fileName);
+			FileOutputStream salida = new FileOutputStream(file);
+			salida.write(fu.getContents());
+			salida.flush();
+			salida.close();
+
+			String pathFile = file.getPath();
+			rawFile = archivo.read(new File(pathFile));
+
+			file.delete();
+			archivo = null;
+
+			msgDoc = fileName + " cargado con exito. ";
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			msgDoc = "Error al cargar archivo";
+
+		}
+	}
+}

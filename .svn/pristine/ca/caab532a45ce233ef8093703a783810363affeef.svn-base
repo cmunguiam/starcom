@@ -1,0 +1,280 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions">
+<h:head>
+	<h:outputStylesheet name="css/cssContent.css" />
+	<style type="text/css">
+.old {
+	background-color: #FFFFE4 !important;
+	background-image: none !important;
+	color: #000000 !important;
+}
+</style>
+</h:head>
+<h:body>
+	<p:growl id="messages" showDetail="true" life="40000" />
+
+	<p:panel id="datos"
+		header="Flujo de Actividades del Flujo N° #{detalleBandejaController.idFlujo}">
+
+		<table width="100%" cellpadding="2" cellspacing="2">
+			<tr>
+				<td><h:outputText value="Flujo Número:"
+						style="font-weight:bold;" /></td>
+				<td><h:outputText
+						value="#{detalleBandejaController.modelTableBandejaSelec.idFlujo}"
+						style=" width : 60px;color:blue" /></td>
+				<td><h:outputText value="Entidad Destino:"
+						style="font-weight:bold;" /></td>
+				<td><h:outputText
+						value="#{detalleBandejaController.modelTableBandejaSelec.nombreEntidad}" /></td>
+			</tr>
+			<tr>
+				<td><h:outputText value="Puesto Tipo:"
+						style="font-weight:bold;" /></td>
+				<td><h:outputText
+						value="#{detalleBandejaController.modelTableBandejaSelec.nombrePuesto}" />
+				</td>
+				<td><h:outputText value="Proceso:" style="font-weight:bold;" /></td>
+				<td><h:outputText
+						value="#{detalleBandejaController.modelTableBandejaSelec.nombreProceso}" /></td>
+			</tr>
+			<tr>
+				<td><h:outputText value="Gerente Público:"
+						style="font-weight:bold;" /></td>
+				<td><h:outputText
+						value="#{detalleBandejaController.modelTableBandejaSelec.nombreGerente}" /></td>
+				<td><h:outputText value="Estado:" style="font-weight:bold;" /></td>
+				<td><h:outputText
+						value="#{detalleBandejaController.estadoFlujo.equals('P')?'Pendiente':flujo.estado.equals('AT')?'Terminado':'Cancelado'}" /></td>
+			</tr>
+		</table>
+		<p:separator />
+		<p:dataTable var="model"
+			value="#{detalleBandejaController.lisBandeja}" id="dtLista"
+			scrollable="true" scrollHeight="408" rows="18" paginator="true"
+			paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			rowStyleClass="#{model.estado eq 'AT' ? null : 'old'}"
+			emptyMessage="#{messages.msgEmptyMessage}" lazy="false">
+
+			<p:column headerText="N°" style="width:5%; white-space: normal;text-align: center;">
+				<h:outputText value="#{model.bandejaPK.correlativo}" />
+			</p:column>
+			<p:column headerText="Proceso"
+				style="width:10%; white-space: normal;">
+				<h:outputText value="#{model.actividad.proceso.nombre}" />
+			</p:column>
+			<p:column headerText="Actividad"
+				style="width:19%; white-space: normal;text-align: length;">
+				<h:outputText value="#{model.actividad.nombre}" id="nombAct"/>
+				<pe:tooltip for="nombAct" value="#{model.actividad.descripcion}"
+					showEffect="fadeIn" hideEffect="fadeIn" atPosition="top center"
+					myPosition="bottom center" />
+			</p:column>
+			<p:column headerText="Fecha Creación" style="width:15%; white-space: normal;text-align: center;">
+				<h:outputText value="#{model.fechaCreacion}">
+					<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+				</h:outputText>
+			</p:column>			
+			<p:column headerText="Rol" style="width:11%; white-space: normal;text-align: center;">
+				<h:outputText value="#{model.actividad.rol.nombre}" />
+			</p:column>
+			<p:column headerText="Usuario"
+				style="width:10%; white-space: normal;text-align: center;">
+				<h:outputText value="#{model.usuarioModifica}" />
+			</p:column>
+			<p:column headerText="Estado" style="width:10%; white-space: normal;text-align: center;">
+				<h:outputText
+					value="#{model.estado.equals('AT')?'Atendido':'En Espera'}" />
+			</p:column>
+			<p:column headerText="Opciones"
+				style="width:20%; white-space: normal;">
+				<p:commandButton value="" icon="ui-icon-search"
+					oncomplete="editDialog.show()" update=":frm:dtLista2,:frm:dlgEdit"
+					title="Ver detalle de actividad">
+					<f:setPropertyActionListener value="#{model}"
+						target="#{detalleBandejaController.bandejaSelec}" />
+				</p:commandButton>
+
+				<p:commandButton id="btnComp" value="" icon="ui-icon-arrow-4-diag"
+					actionListener="#{detalleBandejaController.atenderFlujo(model)}"
+					update=":frm:pnlEditComp"
+					disabled="#{(model.actividad.tipo.equals('C') and model.estado.equals('EE') and detalleBandejaController.rolSelec == model.actividad.rol.idRol and detalleBandejaController.estadoFlujo.equals('P')) ? false : true}"
+					title="Atender Comperta" oncomplete="editDialogComp.show()"
+					immediate="true">
+					<f:setPropertyActionListener
+						value="#{detalleBandejaController.modelTableBandejaSelec}"
+						target="#{detalleBandejaController.modelTableBandejaSelec2}" />
+					<f:setPropertyActionListener value=""
+						target="#{detalleBandejaController.descripcion}" />
+				</p:commandButton>
+
+				<p:commandButton value="" icon="ui-icon-newwin"
+					disabled="#{(model.actividad.tipo.equals('A') and model.estado.equals('EE') and detalleBandejaController.rolSelec == model.actividad.rol.idRol and detalleBandejaController.estadoFlujo.equals('P'))? false : true}"
+					actionListener="#{detalleBandejaController.atenderFlujo(model)}"
+					action="#{atenderFlujoController.atenderSelec}"
+					update=":frm:content" immediate="true" title="Atender Actividad">
+					<f:setPropertyActionListener
+						target="#{contenidoController.includedPage}"
+						value="contenido/atenderFlujo.xhtml" />
+					<f:setPropertyActionListener
+						value="#{detalleBandejaController.modelTableBandejaSelec}"
+						target="#{atenderFlujoController.atender}" />
+				</p:commandButton>
+			</p:column>
+		</p:dataTable>
+		<p:separator />
+		<p:commandButton type="button" onclick="lazyload()"
+			value="Ir a Flujos" icon="ui-icon-arrowreturnthick-1-w"
+			disabled="#{detalleBandejaController.btnflujoVolver}" />
+		<p:spacer width="2" />
+		<p:commandButton type="button" onclick="lazyload2()"
+			value="Ir a Bandeja" icon="ui-icon-arrowreturnthick-1-w"
+			disabled="#{detalleBandejaController.btnbandejaVolver}" />
+	</p:panel>
+	<p:remoteCommand name="lazyload" update=":frm:content">
+		<f:setPropertyActionListener
+			target="#{contenidoController.includedPage}"
+			value="contenido/monitoreo.xhtml" />
+	</p:remoteCommand>
+	<p:remoteCommand name="lazyload2" update=":frm:content">
+		<f:setPropertyActionListener
+			target="#{contenidoController.includedPage}"
+			value="contenido/bandeja.xhtml" />
+	</p:remoteCommand>
+
+	<p:dialog id="dlgEdit" header="Detalle de Actividades"
+		widgetVar="editDialog" modal="true" resizable="false" width="700"
+		showEffect="clip" closable="true" hideEffect="fold">
+
+		<table width="100%" cellpadding="2" cellspacing="2">
+			<tr>
+				<td><h:outputText value="Flujo Número:"
+						style="font-weight:bold;" /></td>
+				<td><h:outputText
+						value="#{detalleBandejaController.bandejaSelec.bandejaPK.idFlujo}"
+						style=" width : 60px;color:blue" /></td>
+
+			</tr>
+			<tr>
+				<td><h:outputText value="Actividad:" style="font-weight:bold;" /></td>
+				<td><h:outputText
+						value="#{detalleBandejaController.bandejaSelec.actividad.nombre}" /></td>
+
+			</tr>
+			<tr>
+				<td><h:outputText value="Descripción de atención:"
+						style="font-weight:bold;" /></td>
+				<td><h:outputText escape="false"
+						value="#{detalleBandejaController.bandejaSelec.descripcion}" /></td>
+
+			</tr>
+
+		</table>
+		<p:separator />
+		<p:dataTable var="model2"
+			value="#{detalleBandejaController.lisDetalleBandeja}" id="dtLista2"
+			scrollable="true" scrollHeight="120" rows="5" style="width:100%;"
+			emptyMessage="#{messages.msgEmptyMessage}">
+			<f:facet name="header">  
+            Lista de Documentos Adjuntos para la Actividad
+        </f:facet>
+			<!-- <p:column headerText="Código" style="width:10%">
+				<h:outputText value="#{model2.idDetalle}" />
+			</p:column> -->
+			<p:column headerText="N°Doc." style="width:8%;">
+				<h:outputText value="#{model2.nroDoc}" />
+			</p:column>
+			<p:column headerText="Tipo Doc." style="width:10%;">
+				<h:outputText value="#{model2.tipoDocumento.nombre}" />
+			</p:column>
+			<p:column headerText="Descripción" style="width:30;%">
+				<h:outputText value="#{model2.descripcion}" />
+			</p:column>
+			<p:column headerText="Fecha E." style="width:12;%">
+				<h:outputText value="#{model2.fechaEmision}">
+					<f:convertDateTime pattern="dd/MM/yyyy" />
+				</h:outputText>
+			</p:column>
+			<p:column headerText="Nombre Doc" style="width:40;%">
+				<h:outputText value="#{model2.urlDocumento}" />
+			</p:column>
+			<p:column headerText="Descargar" style="width:10;%">
+				<p:commandButton id="downloadLink" value="" ajax="false"
+					icon="ui-icon-circle-arrow-s" title="Descargar documento">
+					<f:setPropertyActionListener value="#{model2}"
+						target="#{detalleBandejaController.detalle}" />
+					<p:fileDownload value="#{detalleBandejaController.file3}" />
+				</p:commandButton>
+			</p:column>
+		</p:dataTable>
+	</p:dialog>
+
+	<p:dialog id="dlgEditComp" header="Atender Compuerta"
+		widgetVar="editDialogComp" modal="true" resizable="false" width="450"
+		showEffect="clip" closable="true" hideEffect="fold">
+
+		<p:panel id="pnlEditComp">
+			<table cellpadding="2" cellspacing="2">
+				<tr>
+					<td><h:outputText value="N° Flujo: " /> <h:outputText
+							value="#{detalleBandejaController.modelTableBandejaSelec2.idFlujo}"
+							style="color:blue;" /></td>
+					<td><h:outputText value="Actividad: " /> <h:outputText
+							value="#{detalleBandejaController.modelTableBandejaSelec2.nombreActividad}"
+							style="color:blue;" /></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="Compuerta: " /></td>
+					<td><p:selectOneRadio id="option"
+							value="#{detalleBandejaController.opcionComp}">
+							<f:selectItems value="#{detalleBandejaController.comboCompuerta}" />
+							<p:ajax event="change" process="option"
+								actionListener="#{detalleBandejaController.opcionComp}" />
+						</p:selectOneRadio></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="Descripción de atención:" /></td>
+					<td><p:inputTextarea rows="2" cols="50"
+							value="#{detalleBandejaController.descripcion}" maxlength="600"
+							autoResize="false">
+							<p:ajax event="blur"
+								actionListener="#{detalleBandejaController.descripcion}" />
+						</p:inputTextarea></td>
+				</tr>
+			</table>
+			<f:facet name="footer">
+				<p:commandButton update="dtLista, messages" value="Atender"
+					action="#{atenderFlujoController.atenderFlujo}"
+					icon="ui-icon-check" oncomplete="editDialogComp.hide()">
+					<f:setPropertyActionListener
+						value="#{detalleBandejaController.modelTableBandejaSelec2}"
+						target="#{atenderFlujoController.atender}" />
+					<f:setPropertyActionListener
+						value="#{detalleBandejaController.opcionComp}"
+						target="#{atenderFlujoController.opcionComp}" />
+					<f:setPropertyActionListener
+						value="#{detalleBandejaController.descripcion}"
+						target="#{atenderFlujoController.descripcion}" />
+				</p:commandButton>
+			</f:facet>
+		</p:panel>
+	</p:dialog>
+</h:body>
+<p:ajaxStatus
+	style="width:64px;height:64px;position:fixed;right:5px;bottom:5px"
+	id="ajaxStatusPanel">
+	<f:facet name="start">
+		<p:graphicImage value="./imagenes/loading.gif" />
+	</f:facet>
+
+	<f:facet name="complete">
+		<h:outputText value="" />
+	</f:facet>
+</p:ajaxStatus>
+</html>

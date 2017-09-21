@@ -1,0 +1,54 @@
+package gob.servir.workflow.controller;
+
+import gob.servir.workflow.model.Usuario;
+
+import java.io.Serializable;
+
+import javax.faces.context.FacesContext;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component("contenidoController")
+@Scope("session")
+public class ContenidoController implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+	private static final Logger logger = LoggerFactory
+			.getLogger(ContenidoController.class);
+
+	private String includedPage = "";
+	private Usuario userSesion = null;
+
+	public ContenidoController() {
+		includedPage = "contenido/bandeja.xhtml";
+	}
+
+	public String getIncludedPage() {
+		validarSesion();
+		return includedPage;
+	}
+
+	public void setIncludedPage(String includedPage) {
+		this.includedPage = includedPage;
+	}
+
+	public void validarSesion() {
+		FacesContext context = FacesContext.getCurrentInstance();
+		userSesion = (Usuario) context.getExternalContext().getSessionMap()
+				.get("userSesion");
+
+		if (userSesion == null) {
+			String ctxPath = context.getExternalContext()
+					.getRequestContextPath();
+			try {
+				context.getExternalContext().redirect(ctxPath + "/login.jsf");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+}

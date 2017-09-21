@@ -1,0 +1,335 @@
+package gob.servir.workflow.controller;
+
+import gob.servir.workflow.bean.DataModelPermiso;
+import gob.servir.workflow.dao.ItemMenuDao;
+import gob.servir.workflow.dao.PermisoDao;
+import gob.servir.workflow.dao.RolDao;
+import gob.servir.workflow.model.ItemMenu;
+import gob.servir.workflow.model.Permiso;
+import gob.servir.workflow.model.Rol;
+import gob.servir.workflow.model.Usuario;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.ResourceBundle;
+
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
+
+import org.primefaces.context.RequestContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component("rolController")
+@Scope("session")
+public class RolController implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
+	@Autowired
+	private RolDao rolDao;
+	@Autowired
+	private ItemMenuDao itemMenuDao;
+	@Autowired
+	private PermisoDao permisoDao;
+
+	private Rol nuevoRol = new Rol();
+	private Rol modificaRol = new Rol();
+
+	private List<Rol> listaRol = null;
+	private List<SelectItem> comboEstado = new ArrayList<SelectItem>();
+	private List<ItemMenu> listaItemMenu = new ArrayList<ItemMenu>();
+	private List<ItemMenu> listaItemSelec = new ArrayList<ItemMenu>();
+
+	// Modificar permisos de rol
+	private Long idRol = 0L;
+	private List<Permiso> listaPermisoRol = new ArrayList<Permiso>();
+
+	private DataModelPermiso dataModelPermiso = null;
+
+	private ResourceBundle resourceBundle = null;
+	private FacesContext ctx = null;
+	private boolean swPermiso = false;
+	private Usuario userSesion = null;
+
+	public RolController() {
+
+	}
+
+	public List<Permiso> getListaPermisoRol() {
+
+		listaPermisoRol = new ArrayList<Permiso>();
+
+		if (idRol != 0L) {
+			listaPermisoRol = permisoDao.getListaPermiso(idRol);
+		}
+
+		return listaPermisoRol;
+	}
+
+	public void setListaPermisoRol(List<Permiso> listaPermisoRol) {
+		this.listaPermisoRol = listaPermisoRol;
+	}
+
+	public Long getIdRol() {
+		return idRol;
+	}
+
+	public void setIdRol(Long idRol) {
+		this.idRol = idRol;
+	}
+
+	public DataModelPermiso getDataModelPermiso() {
+
+		listaItemMenu = itemMenuDao.getListaItemMenu();
+
+		dataModelPermiso = new DataModelPermiso(listaItemMenu);
+
+		return dataModelPermiso;
+	}
+
+	public void setDataModelPermiso(DataModelPermiso dataModelPermiso) {
+		this.dataModelPermiso = dataModelPermiso;
+	}
+
+	public List<ItemMenu> getListaItemSelec() {
+		return listaItemSelec;
+	}
+
+	public void setListaItemSelec(List<ItemMenu> listaItemSelec) {
+		this.listaItemSelec = listaItemSelec;
+	}
+
+	public List<ItemMenu> getListaItemMenu() {
+		return listaItemMenu;
+	}
+
+	public void setListaItemMenu(List<ItemMenu> listaItemMenu) {
+		this.listaItemMenu = listaItemMenu;
+	}
+
+	public boolean isSwPermiso() {
+		return swPermiso;
+	}
+
+	public void setSwPermiso(boolean swPermiso) {
+		this.swPermiso = swPermiso;
+	}
+
+	public Rol getNuevoRol() {
+		return nuevoRol;
+	}
+
+	public void setNuevoRol(Rol nuevoRol) {
+		this.nuevoRol = nuevoRol;
+	}
+
+	public Rol getModificaRol() {
+		return modificaRol;
+	}
+
+	public void setModificaRol(Rol modificaRol) {
+		this.modificaRol = modificaRol;
+	}
+
+	public List<Rol> getListaRol() {
+		listaRol = new ArrayList<Rol>();
+		listaRol = rolDao.getListaRol();
+		return listaRol;
+	}
+
+	public void setListaRol(List<Rol> listaRol) {
+		this.listaRol = listaRol;
+	}
+
+	public List<SelectItem> getComboEstado() {
+		comboEstado = new ArrayList<SelectItem>();
+		SelectItem item = null;
+		item = new SelectItem("A", "Activo");
+		comboEstado.add(item);
+		item = new SelectItem("E", "Inactivo");
+		comboEstado.add(item);
+
+		return comboEstado;
+	}
+
+	public void validarSesion() {
+		FacesContext context = FacesContext.getCurrentInstance();
+		userSesion = (Usuario) context.getExternalContext().getSessionMap()
+				.get("userSesion");
+
+		if (userSesion == null) {
+			String ctxPath = context.getExternalContext()
+					.getRequestContextPath();
+			try {
+				context.getExternalContext().redirect(ctxPath + "/login.jsf");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void setComboEstado(List<SelectItem> comboEstado) {
+		this.comboEstado = comboEstado;
+	}
+
+	public void permiso() {
+		swPermiso = false;
+		validarSesion();
+
+		if (!validarNuevoRol())
+			return;
+
+		nuevoRol.setEstado("A");
+		nuevoRol.setFechaCreacion(new Date());
+		nuevoRol.setUsuarioRegistra(userSesion.getUsuario());
+		nuevoRol.setFechaModificacion(new Date());
+		nuevoRol.setUsuarioModifica(userSesion.getUsuario());
+
+		swPermiso = true;
+
+		if (swPermiso) {
+			RequestContext.getCurrentInstance().execute("permisoDialog.show()");
+		}
+	}
+
+	public void guardar() {
+
+		// validarSesion();
+
+		ctx = FacesContext.getCurrentInstance();
+		resourceBundle = ctx.getApplication()
+				.getResourceBundle(ctx, "messages");
+
+		try {
+
+			nuevoRol.setIdRol(rolDao.getIdMax());
+
+			permisoDao.save(nuevoRol, listaItemSelec, listaItemMenu);
+
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_INFO, "EXITO",
+							resourceBundle.getString("msgRegistrar")));
+			limpiar();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, "ERROR",
+							resourceBundle.getString("msgRegistrarError")));
+		}
+
+	}
+
+	public void modificar() {
+		ctx = FacesContext.getCurrentInstance();
+		resourceBundle = ctx.getApplication()
+				.getResourceBundle(ctx, "messages");
+
+		validarSesion();
+
+		try {
+			if (!validarModificaRol())
+				return;
+
+			modificaRol.setFechaModificacion(new Date());
+			modificaRol.setUsuarioModifica(userSesion.getUsuario());
+
+			rolDao.save(modificaRol);
+
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_INFO, "EXITO",
+							resourceBundle.getString("msgModificar")));
+			limpiar();
+		} catch (Exception e) {
+			e.printStackTrace();
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, "ERROR",
+							resourceBundle.getString("msgModificarError")));
+		}
+	}
+
+	public boolean validarNuevoRol() {
+		ctx = FacesContext.getCurrentInstance();
+		resourceBundle = ctx.getApplication()
+				.getResourceBundle(ctx, "messages");
+
+		if (nuevoRol == null) {
+			return false;
+		}
+
+		if (nuevoRol.getNombre().trim().equalsIgnoreCase("")) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+							resourceBundle.getString("msgTxtObligatorio")));
+			return false;
+		}
+
+		if (validarNombreRol()) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+							resourceBundle.getString("msgRegistroExite")));
+			return false;
+		}
+
+		return true;
+	}
+
+	private boolean validarNombreRol() {
+
+		List<Rol> listaRol = rolDao.getListaRolByNombre(nuevoRol.getNombre());
+
+		if (listaRol.size() > 0) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public boolean validarModificaRol() {
+		ctx = FacesContext.getCurrentInstance();
+		resourceBundle = ctx.getApplication()
+				.getResourceBundle(ctx, "messages");
+
+		if (modificaRol == null)
+			return false;
+
+		if (modificaRol.getNombre().trim().equalsIgnoreCase(""))
+			return false;
+
+		return true;
+	}
+
+	public void cambiaEstado(Permiso permiso) {
+		try {
+
+			if (permiso.isEstado())
+				permiso.setEstado(false);
+			else
+				permiso.setEstado(true);
+			permisoDao.save(permiso);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public void limpiar() {
+		nuevoRol = new Rol();
+		modificaRol = new Rol();
+		listaItemSelec = new ArrayList<ItemMenu>();
+		dataModelPermiso = null;
+	}
+
+}

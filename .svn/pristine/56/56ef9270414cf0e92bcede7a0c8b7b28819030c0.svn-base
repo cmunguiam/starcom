@@ -1,0 +1,99 @@
+package gob.servir.workflow.daoImpl;
+
+import gob.servir.workflow.dao.TipoDocumentoDao;
+import gob.servir.workflow.model.TipoDocumento;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.faces.model.SelectItem;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+@Repository
+public class TipoDocumentoDaoImpl implements TipoDocumentoDao {
+	@PersistenceContext
+	private EntityManager em;
+
+	public TipoDocumento find(Long id) {
+		return em.find(TipoDocumento.class, id);
+	}
+
+	@Transactional
+	public TipoDocumento save(TipoDocumento obj) {
+		if (obj.getIdTipoDocumento() == null) {
+			obj.setIdTipoDocumento(obtnerIdMax());
+			em.persist(obj);
+			return obj;
+		} else {
+			return em.merge(obj);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<TipoDocumento> getListaTipoDocumento() {
+		Query q = (Query) em
+				.createQuery("select r from TipoDocumento r ORDER BY r.idTipoDocumento desc");
+
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			as.printStackTrace();
+			return null;
+		}
+	}
+
+	public List<SelectItem> getComboTipoDocumento() {
+
+		List<SelectItem> listaCombo = new ArrayList<SelectItem>();
+		List<TipoDocumento> lista = new ArrayList<TipoDocumento>();
+		try {
+			lista = getListaTipoDocumento();
+		} catch (Exception as) {
+			as.printStackTrace();
+			SelectItem fila = new SelectItem(0L, "Seleccione tipo documento");
+			listaCombo.add(fila);
+			return listaCombo;
+		}
+		SelectItem fila = new SelectItem(0L, "Seleccione tipo documento");
+		listaCombo.add(fila);
+
+		for (TipoDocumento tipo : lista) {
+			fila = new SelectItem(tipo.getIdTipoDocumento(), tipo.getNombre());
+			listaCombo.add(fila);
+		}
+		return listaCombo;
+	}
+
+	public boolean findName(String name) {
+		Query q = (Query) em
+				.createQuery("select r from TipoDocumento r where r.nombre= :name");
+		q.setParameter("name", name);
+		try {
+			if (!q.getResultList().isEmpty())
+				return true;
+
+		} catch (Exception as) {
+			as.printStackTrace();
+			return false;
+		}
+		return false;
+	}
+
+	public Long obtnerIdMax() {
+		try {
+			return (Long) em.createQuery(
+					"select max(t.idTipoDocumento) from TipoDocumento t")
+					.getSingleResult() + 1L;
+		} catch (Exception e) {
+
+		}
+		return 1L;
+
+	}
+
+}

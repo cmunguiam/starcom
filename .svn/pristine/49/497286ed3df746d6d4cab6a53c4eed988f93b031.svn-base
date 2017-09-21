@@ -1,0 +1,23 @@
+package gob.servir.workflow.dao;
+
+import gob.servir.workflow.model.ActividadPK;
+import gob.servir.workflow.model.DetalleActividad;
+import java.util.List;
+
+public interface DetalleActividadDao {
+	
+	public abstract DetalleActividad find(Long id);
+	
+	public abstract DetalleActividad save(DetalleActividad obj);
+	
+	public abstract DetalleActividad edit(DetalleActividad obj);
+	
+	public abstract List<DetalleActividad> getListaDetalleActividad();
+	
+	public abstract List<DetalleActividad> getListaDetalleActividad(ActividadPK id);
+	
+	public abstract List<DetalleActividad> getListaDetalleActividad(ActividadPK id,Long idTipoDoc);
+	
+	public abstract Long getIdMax();
+
+}

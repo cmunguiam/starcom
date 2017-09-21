@@ -1,0 +1,140 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package gob.servir.workflow.model;
+
+import java.io.Serializable;
+
+import javax.persistence.*;
+
+/**
+ * 
+ * @author Hever
+ */
+@Embeddable
+public class BandejaPK implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	@Basic(optional = false)
+	@Column(name = "idFlujo")
+	private Long idFlujo;
+
+	@Basic(optional = false)
+	@Column(name = "idActividad")
+	private Long idActividad;
+
+	@Basic(optional = false)
+	@Column(name = "idProceso")
+	private Long idProceso;
+
+	@Basic(optional = false)
+	@Column(name = "correlativo")
+	private Long correlativo;
+
+	public BandejaPK() {
+	}
+
+	public BandejaPK(Long idFlujo, Long idActividad, Long idProceso,
+			Long correlativo) {
+		super();
+		this.idFlujo = idFlujo;
+		this.idActividad = idActividad;
+		this.idProceso = idProceso;
+		this.correlativo = correlativo;
+	}
+
+	public Long getIdFlujo() {
+		return idFlujo;
+	}
+
+	public void setIdFlujo(Long idFlujo) {
+		this.idFlujo = idFlujo;
+	}
+
+	public Long getIdActividad() {
+		return idActividad;
+	}
+
+	public void setIdActividad(Long idActividad) {
+		this.idActividad = idActividad;
+	}
+
+	public Long getIdProceso() {
+		return idProceso;
+	}
+
+	public void setIdProceso(Long idProceso) {
+		this.idProceso = idProceso;
+	}
+
+	public Long getCorrelativo() {
+		return correlativo;
+	}
+
+	public void setCorrelativo(Long correlativo) {
+		this.correlativo = correlativo;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((correlativo == null) ? 0 : correlativo.hashCode());
+		result = prime * result
+				+ ((idActividad == null) ? 0 : idActividad.hashCode());
+		result = prime * result + ((idFlujo == null) ? 0 : idFlujo.hashCode());
+		result = prime * result
+				+ ((idProceso == null) ? 0 : idProceso.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		BandejaPK other = (BandejaPK) obj;
+		if (correlativo == null) {
+			if (other.correlativo != null)
+				return false;
+		} else if (!correlativo.equals(other.correlativo))
+			return false;
+		if (idActividad == null) {
+			if (other.idActividad != null)
+				return false;
+		} else if (!idActividad.equals(other.idActividad))
+			return false;
+		if (idFlujo == null) {
+			if (other.idFlujo != null)
+				return false;
+		} else if (!idFlujo.equals(other.idFlujo))
+			return false;
+		if (idProceso == null) {
+			if (other.idProceso != null)
+				return false;
+		} else if (!idProceso.equals(other.idProceso))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("BandejaPK [idFlujo=");
+		builder.append(idFlujo);
+		builder.append(", idActividad=");
+		builder.append(idActividad);
+		builder.append(", idProceso=");
+		builder.append(idProceso);
+		builder.append(", correlativo=");
+		builder.append(correlativo);
+		builder.append("]");
+		return builder.toString();
+	}
+
+}

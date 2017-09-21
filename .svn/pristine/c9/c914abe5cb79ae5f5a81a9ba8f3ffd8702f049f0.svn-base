@@ -1,0 +1,410 @@
+package gob.servir.workflow.daoImpl;
+
+import gob.servir.workflow.bean.ModelTableBandeja;
+import gob.servir.workflow.dao.BandejaDao;
+import gob.servir.workflow.dao.DocumentoDao;
+import gob.servir.workflow.dao.FlujoDao;
+import gob.servir.workflow.model.Bandeja;
+import gob.servir.workflow.model.BandejaPK;
+import gob.servir.workflow.model.Documento;
+import gob.servir.workflow.model.Flujo;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+@Repository
+public class FlujoDaoImpl implements FlujoDao {
+	@PersistenceContext
+	private EntityManager em;
+
+	@Autowired
+	private BandejaDao bandejaDao;
+
+	@Autowired
+	private DocumentoDao detalleBandejaDao;
+
+	public Flujo find(Long id) {
+		return em.find(Flujo.class, id);
+	}
+
+	@Transactional
+	public Flujo update(Flujo obj) {
+		try {
+			return em.merge(obj);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+
+	}
+
+	@Transactional
+	public Flujo save(Flujo obj) {
+		try {
+			em.persist(obj);
+			return obj;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Flujo> getListaFlujo() {
+		Query q = (Query) em
+				.createQuery("select f from Flujo f  ORDER BY f.idFlujo desc");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA Flujo VACIO");
+			return null;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Flujo> getListaFlujoPendientes() {
+		Query q = (Query) em
+				.createQuery("select f from Flujo f  where f.estado = :estadoFlujo ORDER BY f.idFlujo desc");
+		q.setParameter("estadoFlujo", "P");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA Flujo VACIO");
+			return null;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Flujo> getListaFlujo(Long idflujo, Long puestoSelec,
+			String gerenteBusc, Long entidadDestinoSelec) {
+
+		Query q = (Query) em
+				.createQuery(" select f from Flujo f where (  (f.idFlujo =?1 or (f.idFlujo >?1 and ?1<1))  "
+						+ "and (f.puestoTipo.idPuesto = ?2 or (f.puestoTipo.idPuesto >?2 and ?2<1)) "
+						+ "and (f.entidadDestino.id_ed = ?3 or (f.entidadDestino.id_ed >?3 and ?3<1)) "
+						+ "and (f.gerentePublico.cod_gerente = ?4 or ?4 like '0') ) ORDER BY f.idFlujo desc");
+
+		q.setParameter(1, idflujo);
+		q.setParameter(2, puestoSelec);
+		q.setParameter(3, entidadDestinoSelec);
+		q.setParameter(4, gerenteBusc);
+
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			as.printStackTrace();
+			System.out.println("LISTA Flujo VACIO");
+			return null;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<ModelTableBandeja> getListaFlujo(String estado) {
+
+		StringBuilder sb = new StringBuilder();
+		ModelTableBandeja model = null;
+		List<ModelTableBandeja> listModel = null;
+		try {
+			sb.append("SELECT f.idFlujo, e.desc_ed, a.id.idActividad, a.nombre as actividad, a.descripcion, a.tipo, p.idProceso, p.nombre as proceso, pt.idPuesto, pt.nombre as puesto, f.fechaCreacion, f.estado, b.descripcion, b.estado, b.bandejaPK.correlativo, r.idRol, CONCAT(g.nombres ||' '||g.ap_paterno ||' '||g.ap_materno) ");
+
+			sb.append("FROM Flujo f, Bandeja b, Actividad a, Proceso p, PuestoTipo pt, Rol r, EntidadDestino e, GerentePublico g ");
+
+			sb.append("WHERE b.bandejaPK.idActividad = a.id.idActividad and ");
+			sb.append("b.bandejaPK.idProceso = a.id.idProceso and ");
+			sb.append("b.bandejaPK.idFlujo = f.idFlujo and ");
+			// sb.append("f.proceso.idProceso = p.idProceso and ");
+			sb.append("f.entidadDestino.id_ed = e.id_ed and ");
+			sb.append("f.gerentePublico.cod_gerente = g.cod_gerente and ");
+			sb.append("b.bandejaPK.idProceso = p.idProceso and ");
+			sb.append("f.puestoTipo.idPuesto = pt.idPuesto and ");
+			sb.append("a.rol.idRol = r.idRol and ");
+			sb.append("b.estado = :estadoBandeja and ");
+			sb.append("f.estado = :estadoFlujo ");
+
+			sb.append("ORDER BY f.idFlujo, f.fechaModificacion ");
+
+			Query q = (Query) em.createQuery(sb.toString());
+			q.setParameter("estadoBandeja", "EE");
+			q.setParameter("estadoFlujo", estado);
+
+			List<Object[]> lista = q.getResultList();
+			listModel = new ArrayList<ModelTableBandeja>();
+
+//			System.out.println("cadena consulta: "+sb.toString());
+
+			
+			int i = 0;
+			for (Object[] row : lista) {
+				model = new ModelTableBandeja();
+				i++;
+				model.setItem(i);
+				model.setIdFlujo((Long) row[0]);
+				model.setNombreEntidad((String) row[1]);
+				// model.setNombreGerente((String) row[2]);
+				model.setIdActividad((Long) row[2]);
+				model.setNombreActividad((String) row[3]);
+				model.setDescripcionActividad((String) row[4]);
+				model.setTipo((String) row[5]);
+				model.setIdProceso((Long) row[6]);
+				model.setNombreProceso((String) row[7]);
+				model.setIdPuesto((Long) row[8]);
+				model.setNombrePuesto((String) row[9]);
+				model.setFechaHora((String) new SimpleDateFormat(
+						"dd/MM/yyyy HH:mm").format(row[10]));
+				model.setEstadoFlujo((String) row[11]);
+				model.setDescripcion((String) row[12]);
+				model.setEstadoBandeja((String) row[13]);
+				model.setCorrelativo((Long) row[14]);
+				model.setIdRol((Long) row[15]);
+				model.setNombreGerente((String) row[16]);
+
+				listModel.add(model);
+			}
+			model = null;
+		} catch (Exception as) {
+			as.printStackTrace();
+			System.out.println("LISTA Flujo VACIO");
+			return null;
+		}
+		return listModel;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<ModelTableBandeja> getListaFlujoMonitoreo() {
+
+		StringBuilder sb = new StringBuilder();
+		ModelTableBandeja model = null;
+		List<ModelTableBandeja> listModel = null;
+		try {
+			sb.append("SELECT f.idFlujo, e.desc_ed, a.id.idActividad, a.nombre as actividad, a.descripcion, a.tipo, p.idProceso, p.nombre as proceso, pt.idPuesto, pt.nombre as puesto, f.fechaCreacion, f.estado, b.descripcion, b.estado, b.bandejaPK.correlativo, r.idRol, CONCAT(g.nombres ||' '||g.ap_paterno ||' '||g.ap_materno) ");
+
+			sb.append("FROM Flujo f, Bandeja b, Actividad a, Proceso p, PuestoTipo pt, Rol r, EntidadDestino e, GerentePublico g ");
+
+			sb.append("WHERE b.bandejaPK.idActividad = a.id.idActividad and ");
+			sb.append("b.bandejaPK.idProceso = a.id.idProceso and ");
+			sb.append("b.bandejaPK.idFlujo = f.idFlujo and ");
+			// sb.append("f.proceso.idProceso = p.idProceso and ");
+			sb.append("f.entidadDestino.id_ed = e.id_ed and ");
+			sb.append("f.gerentePublico.cod_gerente = g.cod_gerente and ");
+			sb.append("b.bandejaPK.idProceso = p.idProceso and ");
+			sb.append("f.puestoTipo.idPuesto = pt.idPuesto and ");
+			sb.append("a.rol.idRol = r.idRol ");
+			
+		
+
+			Query q = (Query) em.createQuery(sb.toString());			
+
+			List<Object[]> lista = q.getResultList();
+			listModel = new ArrayList<ModelTableBandeja>();
+
+			int i = 0;
+			for (Object[] row : lista) {
+				model = new ModelTableBandeja();
+				i++;
+				model.setItem(i);
+				model.setIdFlujo((Long) row[0]);
+				model.setNombreEntidad((String) row[1]);
+				// model.setNombreGerente((String) row[2]);
+				model.setIdActividad((Long) row[2]);
+				model.setNombreActividad((String) row[3]);
+				model.setDescripcionActividad((String) row[4]);
+				model.setTipo((String) row[5]);
+				model.setIdProceso((Long) row[6]);
+				model.setNombreProceso((String) row[7]);
+				model.setIdPuesto((Long) row[8]);
+				model.setNombrePuesto((String) row[9]);
+				model.setFechaHora((String) new SimpleDateFormat(
+						"dd/MM/yyyy HH:mm").format(row[10]));
+				model.setEstadoFlujo((String) row[11]);
+				model.setDescripcion((String) row[12]);
+				model.setEstadoBandeja((String) row[13]);
+				model.setCorrelativo((Long) row[14]);
+				model.setIdRol((Long) row[15]);
+				model.setNombreGerente((String) row[16]);
+
+				listModel.add(model);
+			}
+			model = null;
+		} catch (Exception as) {
+			as.printStackTrace();
+			System.out.println("LISTA Flujo VACIO");
+			return null;
+		}
+		return listModel;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<ModelTableBandeja> getListaFlujo(String estado, Long idRol) {
+
+		StringBuilder sb = new StringBuilder();
+		ModelTableBandeja model = null;
+		List<ModelTableBandeja> listModel = null;
+
+		try {
+			sb.append("SELECT f.idFlujo, e.desc_ed, a.id.idActividad, a.nombre as actividad, a.descripcion, p.idProceso, ");
+			sb.append("p.nombre as proceso, pt.idPuesto, pt.nombre as puesto, f.fechaCreacion, f.estado, r.idRol, b.descripcion, b.estado, a.tipo, b.bandejaPK.correlativo, CONCAT(g.nombres ||' '||g.ap_paterno ||' '||g.ap_materno)");
+
+			sb.append("FROM Flujo f, Bandeja b, Actividad a, Proceso p, PuestoTipo pt, Rol r, EntidadDestino e, GerentePublico g ");
+
+			sb.append("WHERE b.bandejaPK.idActividad = a.id.idActividad and ");
+			sb.append("b.bandejaPK.idProceso = a.id.idProceso and ");
+			sb.append("b.bandejaPK.idFlujo = f.idFlujo and ");
+			// sb.append("f.proceso.idProceso = p.idProceso and ");
+			sb.append("f.entidadDestino.id_ed = e.id_ed and ");
+			sb.append("f.gerentePublico.cod_gerente = g.cod_gerente and ");
+
+			sb.append("b.bandejaPK.idProceso = p.idProceso and ");
+			sb.append("f.puestoTipo.idPuesto = pt.idPuesto and ");
+			sb.append("a.rol.idRol = r.idRol and ");
+			sb.append("b.estado = :estadoBandeja and ");
+			sb.append("f.estado = :estadoFlujo and ");
+			sb.append("a.rol.idRol = :idRol ");
+
+			sb.append("ORDER BY f.idFlujo, f.fechaModificacion");
+
+			Query q = (Query) em.createQuery(sb.toString());
+			q.setParameter("estadoBandeja", "EE");
+			q.setParameter("estadoFlujo", estado);
+			q.setParameter("idRol", idRol);
+
+//			System.out.println("cadena consulta: "+sb.toString());
+			
+			List<Object[]> lista = q.getResultList();
+			listModel = new ArrayList<ModelTableBandeja>();
+
+			int i = 0;
+			for (Object[] row : lista) {
+				model = new ModelTableBandeja();
+				i++;
+				model.setItem(i);
+				model.setIdFlujo((Long) row[0]);
+				model.setNombreEntidad((String) row[1]);
+				// model.setNombreGerente((String) row[2]);
+				model.setIdActividad((Long) row[2]);
+				model.setNombreActividad((String) row[3]);
+				model.setDescripcionActividad((String) row[4]);
+				model.setIdProceso((Long) row[5]);
+				model.setNombreProceso((String) row[6]);
+				model.setIdPuesto((Long) row[7]);
+				model.setNombrePuesto((String) row[8]);
+				model.setFechaHora((String) new SimpleDateFormat(
+						"dd/MM/yyyy HH:mm").format(row[9]));
+				model.setEstadoFlujo((String) row[10]);
+				model.setIdRol((Long) row[11]);
+				model.setDescripcion((String) row[12]);
+				model.setEstadoBandeja((String) row[13]);
+				model.setTipo((String) row[14]);
+				model.setCorrelativo((Long) row[15]);
+				model.setNombreGerente((String) row[16]);
+
+				listModel.add(model);
+			}
+
+		} catch (Exception as) {
+			as.printStackTrace();
+			return null;
+		}
+		return listModel;
+	}
+
+	public Flujo finfIdFlujo() {
+		Query q = (Query) em
+				.createQuery("SELECT f FROM Flujo f WHERE f.idFlujo=(select max(f.idFlujo) from Flujo f)");
+
+		try {
+			return (Flujo) q.getSingleResult();
+		} catch (Exception as) {
+			// as.printStackTrace();
+			System.out.println("LISTA Flujo VACIO");
+			return null;
+		}
+	}
+
+	@Transactional
+	public Long saveTotal2(Flujo flujo, Bandeja bandeja, Bandeja bandeja2,
+			List<Documento> listaDetalleBandeja, String user) {
+		try {
+			save(flujo);
+			bandejaDao.save(bandeja);
+			bandejaDao.save(bandeja2);
+			BandejaPK bandejaPK = new BandejaPK(bandeja.getBandejaPK()
+					.getIdFlujo(), bandeja.getBandejaPK().getIdActividad(),
+					bandeja.getBandejaPK().getIdProceso(), bandeja
+							.getBandejaPK().getCorrelativo());
+			Bandeja bandejaBus = bandejaDao.find(bandejaPK);
+
+			for (Documento idDetalle : listaDetalleBandeja) {
+
+				idDetalle.setBandeja(bandejaBus);
+				idDetalle.setUsuarioRegistra(user);
+				idDetalle.setEstado("A");
+				detalleBandejaDao.save(idDetalle);
+			}
+
+		} catch (Exception e) {
+			System.out.println("error al guadar flujo");
+			e.printStackTrace();
+			return 0L;
+
+		}
+
+		return 1L;
+	}
+
+	@Transactional
+	public Long saveTotal(Flujo flujo, Bandeja bandeja,
+			List<Documento> listaDetalleBandeja) {
+
+		BandejaPK bandejaPK = null;
+		Bandeja objBandeja = null;
+		try {
+
+			em.persist(flujo);
+
+			em.persist(bandeja);
+
+			bandejaPK = new BandejaPK(flujo.getIdFlujo(), bandeja
+					.getBandejaPK().getIdActividad() + 1, bandeja
+					.getBandejaPK().getIdProceso(), bandeja.getBandejaPK()
+					.getCorrelativo() + 1);
+
+			objBandeja = new Bandeja();
+
+			objBandeja.setBandejaPK(bandejaPK);
+			objBandeja.setEstado("EE");
+			objBandeja.setFechaCreacion(new Date());
+			objBandeja.setUsuarioRegistra(flujo.getUsuarioRegistra());
+
+			em.persist(objBandeja);
+
+			for (Documento row : listaDetalleBandeja) {
+
+				row.setIdDetalle(detalleBandejaDao.getIdMax());
+				row.setBandeja(bandeja);
+				row.setUsuarioRegistra(bandeja.getUsuarioRegistra());
+				row.setFechaCreacion(new Date());
+				row.setEstado("A");
+				em.persist(row);
+			}
+
+		} catch (Exception e) {
+			System.out.println("error al guadar flujo");
+			e.printStackTrace();
+			return 0L;
+
+		}
+
+		return 1L;
+	}
+
+}

@@ -1,0 +1,128 @@
+package gob.servir.workflow.controller;
+
+import gob.servir.workflow.bean.ModelTableBandeja;
+import gob.servir.workflow.dao.BandejaDao;
+import gob.servir.workflow.dao.FlujoDao;
+import gob.servir.workflow.model.Flujo;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.faces.model.SelectItem;
+
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFRichTextString;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.util.HSSFColor;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component("reporteFlujoController")
+@Scope("session")
+public class ReporteFlujoController {
+
+	@Autowired
+	private LoginController loginController;
+	@Autowired
+	private FlujoDao flujoDao;
+	@Autowired
+	private BandejaDao bandejaDao;
+
+	private List<Flujo> listaFlujo2 = new ArrayList<Flujo>();
+	private List<SelectItem> listaFlujo = new ArrayList<SelectItem>();
+	private Long flujoSelec = 0L;
+
+	private ModelTableBandeja modelTableBandejaSelec = new ModelTableBandeja();
+	private List<ModelTableBandeja> listBandeja = new ArrayList<ModelTableBandeja>();
+
+	public ReporteFlujoController() {
+		super();
+	}
+
+	public Long getFlujoSelec() {
+		return flujoSelec;
+	}
+
+	public List<SelectItem> getListaFlujo() {
+		listaFlujo = flujoDao.getComboFlujo();
+		return listaFlujo;
+	}
+
+	public void setListaFlujo(List<SelectItem> listaFlujo) {
+		this.listaFlujo = listaFlujo;
+	}
+
+	public void setFlujoSelec(Long flujoSelec) {
+		this.flujoSelec = flujoSelec;
+	}
+
+	public List<ModelTableBandeja> getListBandeja() {
+		return listBandeja;
+	}
+
+	public void setListBandeja(List<ModelTableBandeja> listBandeja) {
+		this.listBandeja = listBandeja;
+	}
+
+	public ModelTableBandeja getModelTableBandejaSelec() {		
+			
+		return modelTableBandejaSelec;
+	}
+
+	public void setModelTableBandejaSelec(
+			ModelTableBandeja modelTableBandejaSelec) {
+		this.modelTableBandejaSelec = modelTableBandejaSelec;
+	}
+
+	public void buscarFlujo() {
+		
+		listBandeja = flujoDao.getListaFlujo(flujoSelec);
+		
+		if(listBandeja.size()>0)
+			modelTableBandejaSelec=listBandeja.get(0);
+	}
+	
+	public void postProcessXLS(Object document) {
+		HSSFWorkbook wb = (HSSFWorkbook) document;
+		HSSFSheet sheet = wb.getSheetAt(0);
+		HSSFRow header = sheet.getRow(0);
+		HSSFCellStyle cellStyle = wb.createCellStyle();
+		cellStyle.setFillForegroundColor(HSSFColor.GREY_25_PERCENT.index);
+
+		HSSFFont font = wb.createFont();
+		font.setFontName(HSSFFont.FONT_ARIAL);
+		font.setFontHeightInPoints((short) 8);
+		font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
+		font.setColor(HSSFColor.WHITE.index);
+		
+		cellStyle.setFillForegroundColor(IndexedColors.DARK_RED.getIndex());
+		cellStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+		cellStyle.setFont(font);
+
+		String tituloHeader[] = { "N°", "Proceso",
+				"Actividad/Compuerta", "Estado", "Fecha Creación",
+				"Fecha Atención", "Tiempo Atención"};
+
+		for (int i = 0; i < header.getPhysicalNumberOfCells(); i++) {
+			header.getCell(i).setCellStyle(cellStyle);
+			header.getCell(i).setCellValue(
+					new HSSFRichTextString(tituloHeader[i]));
+		}
+
+		Iterator<Row> rowIterator = sheet.iterator();
+		while (rowIterator.hasNext()) {
+			Row row = rowIterator.next();
+			sheet.autoSizeColumn(row.getRowNum());
+		}
+
+	}
+
+}

@@ -1,0 +1,19 @@
+package gob.servir.workflow.dao;
+
+import gob.servir.workflow.model.GerentePublico;
+import java.util.List;
+
+import javax.faces.model.SelectItem;
+
+public interface GerentePublicoDao {
+
+	public abstract GerentePublico find(String cod_gerente);
+
+	public abstract List<GerentePublico> buscarNombreDni(String nombreDni);
+
+	public abstract List<GerentePublico> getListaGerentePublico();
+
+	public abstract List<SelectItem> getComboGerentePublico();
+
+
+}

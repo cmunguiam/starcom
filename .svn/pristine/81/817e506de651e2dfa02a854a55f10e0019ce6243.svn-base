@@ -1,0 +1,122 @@
+package gob.servir.workflow.daoImpl;
+
+import gob.servir.workflow.dao.ActividadDao;
+import gob.servir.workflow.model.Actividad;
+import gob.servir.workflow.model.ActividadPK;
+import gob.servir.workflow.model.DetalleActividad;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.faces.model.SelectItem;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+@Repository
+public class ActividadDaoImpl implements ActividadDao {
+	@PersistenceContext
+	private EntityManager em;
+
+	public Actividad find(ActividadPK id) {
+		return em.find(Actividad.class, id);
+	}
+
+	@Transactional
+	public Actividad save(Actividad obj) {
+		if (obj.getId() == null) {
+			em.persist(obj);
+			return obj;
+		} else {
+			return em.merge(obj);
+		}
+	}
+	
+	@Transactional
+	public void save(Actividad obj, List<DetalleActividad> listDetalle) {
+		DetalleActividad detalle = null;
+		try {
+			
+			save(obj);
+			
+			for(DetalleActividad row : listDetalle){
+				
+				row.setActividad(obj);
+				row.setEstado("A");
+				row.setUsuarioRegistra(obj.getUsuarioModifica());
+				row.setFechaCreacion(new Date());
+				row.setUsuarioModifica(obj.getUsuarioModifica());
+				row.setFechaModificacion(new Date());
+	
+				save(row);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Transactional
+	public void save(DetalleActividad obj) {
+		try {
+			em.persist(obj);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Actividad> getListaActividad() {
+		Query q = (Query) em
+				.createQuery("select a from Actividad a where a.estado =:estado");
+		q.setParameter("estado", "A");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA ACTIVIDAD VACIO");
+			return null;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Actividad> getListaActividad(Long idProceso) {
+		Query q = (Query) em
+				.createQuery("select a from Actividad a where a.proceso.idProceso =:idProceso and a.estado =:estado");
+		q.setParameter("idProceso", idProceso);
+		q.setParameter("estado", "A");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA ACTIVIDAD VACIO");
+			return null;
+		}
+	}
+
+	public List<SelectItem> getComboActividad(Long idProceso) {
+
+		List<SelectItem> listaCombo = new ArrayList<SelectItem>();
+		List<Actividad> lista = new ArrayList<Actividad>();
+		try {
+			lista = getListaActividad(idProceso);
+		} catch (Exception as) {
+			as.printStackTrace();
+			SelectItem fila = new SelectItem(0L, "Seleccione actividad");
+			listaCombo.add(fila);
+			return listaCombo;
+		}
+		SelectItem fila = new SelectItem(0L, "Seleccione actividad");
+		listaCombo.add(fila);
+
+		for (Actividad tipo : lista) {
+			fila = new SelectItem(tipo.getId().getIdActividad(), tipo.getNombre());
+			listaCombo.add(fila);
+		}
+		return listaCombo;
+	}
+	
+	
+
+}

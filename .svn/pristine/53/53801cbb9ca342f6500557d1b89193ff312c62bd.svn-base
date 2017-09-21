@@ -1,0 +1,21 @@
+package gob.servir.workflow.dao;
+
+import gob.servir.workflow.model.TipoDocumento;
+
+import java.util.List;
+
+import javax.faces.model.SelectItem;
+
+public interface TipoDocumentoDao {
+	
+	public abstract TipoDocumento find(Long id);
+	
+	public abstract boolean findName(String  name);
+	
+	public abstract TipoDocumento save(TipoDocumento obj);
+	
+	public abstract List<TipoDocumento> getListaTipoDocumento();
+	
+	public abstract List<SelectItem> getComboTipoDocumento();
+
+}

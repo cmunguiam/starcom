@@ -1,0 +1,30 @@
+package gob.servir.workflow.dao;
+
+import gob.servir.workflow.model.BandejaPK;
+import gob.servir.workflow.model.Documento;
+
+import java.util.List;
+
+public interface DocumentoDao {
+
+	public abstract Documento find(Long id);
+
+	public abstract Documento save(Documento obj);
+	
+	public abstract Documento edit(Documento obj);
+	
+	public abstract void delete(Documento obj);
+
+	public abstract List<Documento> getListaDetalleBandeja();
+	
+	public abstract List<Documento> getListaDetalleBandeja(BandejaPK id);
+	
+	public abstract void deleteListaDetalleBandeja(Long id);
+	
+	public abstract List<Documento> getListaValidarNroDoc(BandejaPK id, String nroDoc);
+	
+	public abstract List<Documento> getListFlujo(Long idFlujo);
+	
+	public abstract Long getIdMax();
+
+}

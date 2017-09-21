@@ -1,0 +1,301 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+	<h:outputStylesheet name="css/cssContent.css" />
+</h:head>
+<h:body>
+	<script type="text/javascript" src="./resources/js/calendario.js"></script>
+	<p:growl id="messages" showDetail="true" life="40000" />
+	<p:panel id="datos2" header="#{messages.lblCrearFlujo}">
+		<table cellpadding="2" cellspacing="2">
+			<tr>
+				<td>#{messages.lblEntidad}<h:outputText value="*"
+						styleClass="obligatorio" /></td>
+				<td><p:inputText id="entidad" tabindex="1" maxlength="60"
+						value="#{flujoController.entidadDestinoSelect.desc_ed}"
+						style=" width : 270px;" readonly="true" /> <p:spacer width="10" />
+					<p:commandButton value="" icon="ui-icon-search"
+						style="height:25px;" update=":frm:pnlEdit"
+						oncomplete="editDialog.show()" title="Buscar Entidad Pública">
+					</p:commandButton></td>
+				<td>#{messages.lblNumeroFlujo}<h:outputText value="*"
+						styleClass="obligatorio" /></td>
+				<td><p:inputText id="idFlujo2" tabindex="2" maxlength="30"
+						value="#{flujoController.idFlujo}"
+						style=" width : 180px; color:red" readonly="true" /></td>
+			</tr>
+			<tr>
+				<td>#{messages.lblGerentePublico}</td>
+				<td><p:inputText id="publico" tabindex="3"
+						value="#{flujoController.gerentePublicoSelect.nombres} #{flujoController.gerentePublicoSelect.ap_paterno} #{flujoController.gerentePublicoSelect.ap_materno}"
+						style=" width : 270px;" readonly="true" /> <p:spacer width="10" />
+					<p:commandButton value="" icon="ui-icon-search"
+						update=":frm:pnlEdit2" oncomplete="editDialog2.show()"
+						style="height:25px;" title="Buscar Gerente Público">
+					</p:commandButton></td>
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td>#{messages.lblPuesto}<h:outputText value="*"
+						styleClass="obligatorio" /></td>
+				<td><p:selectOneMenu id="tipoPuesto" style=" width : 325px;"
+						value="#{flujoController.puestoSelec}" tabindex="4">
+						<f:selectItems value="#{flujoController.comboPuesto}" />
+					</p:selectOneMenu></td>
+				<td>#{messages.lblProceso}<h:outputText value="*"
+						styleClass="obligatorio" /></td>
+				<td><p:selectOneMenu id="tipoProceso"
+						value="#{flujoController.procesoSelec}" style=" width : 210px;"
+						disabled="#{flujoController.estadoComboProceso}" tabindex="5">
+						<f:selectItems value="#{flujoController.comboProceso}" />
+					</p:selectOneMenu></td>
+			</tr>
+
+		</table>
+
+		<p:panel id="datos" header=" Adjuntar Documentos">
+			<table>
+				<tr>
+					<td><h:outputText value="Tipo Doc." /></td>
+					<td><p:spacer width="28" /></td>
+					<td><p:selectOneMenu id="tipoDoc"
+							value="#{flujoController.tipoDocSelec}" style=" width : 160px;"
+							tabindex="6">
+							<f:selectItems value="#{flujoController.comboTipoDoc}" />
+							<p:ajax event="change" process="tipoDoc" update=":frm:upload"
+								actionListener="#{flujoController.tipoDocSelec}" />
+						</p:selectOneMenu></td>
+					<td><h:outputText value="Número Doc." /></td>
+					<td><p:inputText id="ndoc" tabindex="7" maxlength="60"
+							style=" width : 50px;" value="#{flujoController.nuevo.nroDoc}" /></td>
+					<td><h:outputText value="Fecha Emisión:" /></td>
+					<td><p:calendar id="popupButtonCal" tabindex="8" locale="es"
+							value="#{flujoController.nuevo.fechaEmision}"
+							maxdate="#{flujoController.maxdate}" showOn="button"
+							navigator="true" effect="fadeIn" /></td>
+				</tr>
+			</table>
+			<table>
+				<tr>
+					<td><h:outputText value="Descripción Doc." /></td>
+					<td><p:inputTextarea rows="3" cols="62" queryDelay="250"
+							tabindex="9" minQueryLength="4"
+							value="#{flujoController.nuevo.descripcion}" /></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="Adjuntar Doc.:" /></td>
+					<td><p:fileUpload id="upload"
+					        disabled="#{ (flujoController.tipoDocSelec >0)? false:true}"
+							fileUploadListener="#{flujoController.handleFileUpload}"
+							mode="advanced" update="msgDoc" multiple="false"
+							label="Seleccionar" uploadLabel="Cargar" cacelLabel="Cancelar"
+							sizeLimit="10000000"
+							allowTypes="/(\.|\/)(doc|docx|xls|xlsx|pdf)$/" /> <h:outputText
+							id="msgDoc" value="#{flujoController.msgDoc}" style="color:red;" />
+					</td>
+				</tr>
+			</table>
+			<p:separator id="separator3" />
+			<p:commandButton id="agregar" value="Agregar" icon="ui-icon-plus"
+				action="#{flujoController.agregar}" tabindex="10"
+				update="datos,detalleFlujoList,messages" />
+			<p:spacer width="2" />
+			<p:commandButton value="Cancelar"
+				action="#{flujoController.limpiarDetalleBandeja}"
+				icon="ui-icon-close" update="datos" tabindex="11" />
+			<p:separator id="separator4" />
+			<p:dataTable var="detalleBandeja"
+				value="#{flujoController.listaDetalleBandeja}" id="detalleFlujoList"
+				scrollable="true" scrollHeight="70" rows="5"
+				emptyMessage="#{messages.msgEmptyMessage}">
+
+				<f:facet name="header">  
+		            Lista de Documentos Adjuntos
+		        	</f:facet>
+				<p:column headerText="Nro Doc" style="width:20%">
+					<h:outputText value="#{detalleBandeja.nroDoc}" />
+				</p:column>
+				<p:column headerText="Tipo Documento" style="width:30%">
+					<h:outputText value="#{detalleBandeja.tipoDocumento.nombre}" />
+				</p:column>
+				<p:column headerText="Documento" style="width:40%">
+					<h:outputText value="#{detalleBandeja.urlDocumento}" />
+				</p:column>
+				<p:column headerText="Fecha" style="width:25%">
+					<h:outputText value="#{detalleBandeja.fechaEmision}">
+						<f:convertDateTime pattern="dd/MM/yyyy" />
+					</h:outputText>
+				</p:column>
+				<p:column headerText="Opciones" style="width:20%">
+					<p:commandButton value="" update="detalleFlujoList"
+						action="#{flujoController.eliminarDoc(detalleBandeja)}"
+						icon="ui-icon ui-icon-trash" title="Eliminar" />
+					<p:commandButton value="" update=":frm:datos,detalleFlujoList"
+						action="#{flujoController.editarDoc(detalleBandeja)}"
+						icon="ui-icon ui-icon-pencil" title="Editar" />
+				</p:column>
+			</p:dataTable>
+		</p:panel>
+		<p:separator id="separator1" />
+		<p:commandButton value="Guardar"
+			action="#{flujoController.guardarFlujo}" icon="ui-icon-disk"
+			update="dtLista4,datos2,messages" tabindex="12"/>
+		<p:spacer width="2" />
+		<p:commandButton value="Cancelar" icon="ui-icon-close"
+			action="#{flujoController.limpiar}" update="datos2" tabindex="13"/>
+		<p:separator id="separator2" />
+		<p:dataTable var="flujo" id="dtLista4" scrollable="true"
+			value="#{flujoController.listaFlujo}" scrollHeight="100"
+			paginator="true" rows="5" emptyMessage="#{messages.msgEmptyMessage}"
+			paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			rowsPerPageTemplate="5,10,15">
+
+			<f:facet name="header">  
+            Lista de Flujos de Proceso
+            </f:facet>
+
+			<p:column headerText="Código" style="width:6%">
+				<h:outputText value="#{flujo.idFlujo}" />
+			</p:column>
+			<p:column headerText="Entidad Destino" style="width:30%">
+				<h:outputText value="#{flujo.entidadDestino.desc_ed}" />
+			</p:column>
+			<p:column headerText="Proceso" style="width:30%">
+				<h:outputText value="#{flujo.proceso.nombre}" />
+			</p:column>
+			<p:column headerText="Fecha Creación" style="width:17%">
+				<h:outputText value="#{flujo.fechaCreacion}">
+					<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+				</h:outputText>
+			</p:column>
+			<p:column headerText="Estado" style="width:10%">
+				<h:outputText
+					value="#{flujo.estado.equals('P')?'Pendiente':'Terminado'}" />
+			</p:column>
+			<p:column headerText="Opciones" style="width:8%">
+				<p:commandButton value="" icon="ui-icon ui-icon-pencil"
+					title="Editar" action="#{flujoController.editarFlujo(flujo)}"
+					update=":frm:datos2">
+				</p:commandButton>
+			</p:column>
+		</p:dataTable>
+	</p:panel>
+
+	<p:dialog id="dlgEdit" header="#{messages.lblBuscarEntidad}"
+		widgetVar="editDialog" modal="true" resizable="false" width="500"
+		showEffect="clip" closable="true" hideEffect="fold">
+
+		<p:panel id="pnlEdit">
+			<table cellpadding="2" cellspacing="2">
+				<tr>
+					<td>#{messages.lblBuscarEntidadNombre}</td>
+					<td><p:inputText value="#{flujoController.entidadBusc}" /></td>
+					<td><p:commandButton value="#{messages.btnBuscar}"
+							actionListener="#{flujoController.buscarEntidad}"
+							update=":frm:dtLista" icon="ui-icon-check" /></td>
+				</tr>
+			</table>
+		</p:panel>
+		<p:separator />
+
+		<p:dataTable var="entidadTipo"
+			value="#{flujoController.listaEntidadTipo}" id="dtLista"
+			scrollable="true" scrollHeight="235" paginator="true" rows="10"
+			paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			rowsPerPageTemplate="5,10,15"
+			emptyMessage="No hay resultados para el criterio de busqueda">
+
+			<f:facet name="header">  
+            		#{messages.lblListEntidades}
+       			</f:facet>
+
+			<p:column headerText="#{messages.lblCodigo}" style="width:10%"
+				sortBy="#{entidadTipo.id_ed}">
+				<h:outputText value="#{entidadTipo.id_ed}" />
+			</p:column>
+			<p:column headerText="#{messages.lblNombre}" style="width:50%"
+				sortBy="#{entidadTipo.desc_ed}">
+				<h:outputText value="#{entidadTipo.desc_ed}" />
+			</p:column>
+			<p:column headerText="Opciones" style="width:20%">
+				<p:commandButton value="" update=":frm:entidad"
+					oncomplete="editDialog.hide()" icon="ui-icon-check"
+					title="Seleccionar Entidad Pública">
+					<f:setPropertyActionListener value="#{entidadTipo}"
+						target="#{flujoController.entidadDestinoSelect}" />
+				</p:commandButton>
+			</p:column>
+		</p:dataTable>
+
+	</p:dialog>
+
+	<p:dialog id="dlgEdit2" header="#{messages.lblBuscarGerente}"
+		widgetVar="editDialog2" modal="true" resizable="false" width="650"
+		showEffect="clip" closable="true" hideEffect="fold">
+
+		<p:panel id="pnlEdit2">
+			<table cellpadding="2" cellspacing="2">
+				<tr>
+					<td><h:outputText value="#{messages.lblBuscarGerenteNombre}" /></td>
+					<td><p:inputText value="#{flujoController.gerenteBusc}" /></td>
+					<td><p:commandButton value="#{messages.btnBuscar}"
+							actionListener="#{flujoController.buscarGerente}"
+							update=":frm:dtLista2" icon="ui-icon-check" /></td>
+				</tr>
+			</table>
+		</p:panel>
+		<p:separator />
+
+		<p:dataTable var="entidadGerente"
+			value="#{flujoController.listaGerentePublico}" id="dtLista2"
+			scrollable="true" scrollHeight="235" paginator="true" rows="10"
+			paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			rowsPerPageTemplate="5,10,15"
+			emptyMessage="No hay resultados para el criterio de busqueda">
+
+			<f:facet name="header">    
+            	#{messages.lblListGerentesPublicos}
+            	</f:facet>
+
+			<p:column headerText="#{messages.lblCodigo}" style="width:15%"
+				sortBy="#{entidadGerente.cod_gerente}">
+				<h:outputText value="#{entidadGerente.cod_gerente}" />
+			</p:column>
+			<p:column headerText="#{messages.lblListGerentesPublicosNombres}"
+				sortBy="#{entidadGerente.nombres}" style="width:61%">
+				<h:outputText
+					value="#{entidadGerente.ap_paterno} #{entidadGerente.ap_materno}, #{entidadGerente.nombres}" />
+			</p:column>
+			<p:column headerText="#{messages.lblListGerentesPublicosDni}"
+				sortBy="#{entidadGerente.dni}" style="width:17%">
+				<h:outputText value="#{entidadGerente.dni}" />
+			</p:column>
+			<p:column headerText="Opciones" style="width:14%">
+				<p:commandButton value="" update=":frm:publico"
+					oncomplete="editDialog2.hide()" icon="ui-icon-check"
+					title="Seleccionar Gerente Público">
+					<f:setPropertyActionListener value="#{entidadGerente}"
+						target="#{flujoController.gerentePublicoSelect}" />
+				</p:commandButton>
+			</p:column>
+		</p:dataTable>
+	</p:dialog>
+</h:body>
+<p:ajaxStatus
+	style="width:64px;height:64px;position:fixed;right:5px;bottom:5px"
+	id="ajaxStatusPanel">
+	<f:facet name="start">
+		<p:graphicImage value="./imagenes/loading.gif" />
+	</f:facet>
+
+	<f:facet name="complete">
+		<h:outputText value="" />
+	</f:facet>
+</p:ajaxStatus>
+</html>

@@ -1,0 +1,39 @@
+package gob.servir.workflow.dao;
+
+import gob.servir.workflow.bean.ModelTableBandeja;
+import gob.servir.workflow.model.Bandeja;
+import gob.servir.workflow.model.Documento;
+import gob.servir.workflow.model.Flujo;
+
+import java.util.List;
+
+public interface FlujoDao {
+
+	public abstract Flujo find(Long id);
+
+	public abstract Flujo save(Flujo obj);
+		
+	public abstract Long saveTotal2(Flujo flujo, Bandeja bandeja,Bandeja bandeja2,
+			List<Documento> listDetalleBandeja, String user);
+
+	public abstract Long saveTotal(Flujo flujo, Bandeja bandeja,
+			List<Documento> listDetalleBandeja);
+	
+	public abstract Flujo update(Flujo obj);
+
+	public abstract List<Flujo> getListaFlujo();
+
+	public abstract List<Flujo> getListaFlujoPendientes();
+
+	public abstract Flujo finfIdFlujo();
+
+	public abstract List<ModelTableBandeja> getListaFlujo(String estado);
+
+	public abstract List<ModelTableBandeja> getListaFlujo(String estado,
+			Long idRol);
+
+	public abstract List<Flujo> getListaFlujo(Long idflujoc, Long puestoSelec,
+			String gerenteBusc, Long entidadDestinoSele);
+
+	public abstract List<ModelTableBandeja> getListaFlujoMonitoreo();
+}

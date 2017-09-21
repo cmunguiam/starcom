@@ -1,0 +1,29 @@
+package gob.servir.workflow.util;
+
+public interface Constantes {
+
+	// roles
+	public static final Long ROLE_ADMIN = 1L;
+	public static final Long ROLE_PE = 2L;
+	public static final Long ROLE_GDGP = 3L;
+	public static final Long ROLE_SELEC = 4L;
+	public static final Long ROLE_ASIG = 5L;
+	public static final Long ROLE_CONV = 6L;
+	public static final Long ROLE_MyE = 7L;
+	public static final Long ROLE_LOGI = 8L;
+	public static final Long ROLE_OAJ = 9L;	
+	public static final Long ROLE_GG = 10L;
+	public static final Long ROLE_TI = 11L;
+	public static final Long ROLE_LEG = 12L;
+	
+	
+	//estado
+	public static final String ACTIVO = "A";
+	public static final String INACTIVO = "E";
+	public static final String PENDIENTE = "P";
+	public static final String INICIADO = "I";
+	public static final String EN_ESPERA = "EE";
+	public static final String ATENDIDO = "AT";
+	public static final String CANCELADO = "C";
+	public static final String CONFIRMADO = "C";
+}

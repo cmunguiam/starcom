@@ -1,0 +1,84 @@
+package gob.servir.workflow.model;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
+/**
+ * 
+ * @author Hever Pumallihua
+ */
+@Entity
+public class EntidadDestino implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+	@Id
+	private Long id_ed;
+	@Column
+	private String desc_ed;
+
+	public EntidadDestino() {
+		super();
+	}
+
+	public Long getId_ed() {
+		return id_ed;
+	}
+
+	public void setId_ed(Long id_ed) {
+		this.id_ed = id_ed;
+	}
+
+	public String getDesc_ed() {
+		return desc_ed;
+	}
+
+	public void setDesc_ed(String desc_ed) {
+		this.desc_ed = desc_ed;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((desc_ed == null) ? 0 : desc_ed.hashCode());
+		result = prime * result + ((id_ed == null) ? 0 : id_ed.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		EntidadDestino other = (EntidadDestino) obj;
+		if (desc_ed == null) {
+			if (other.desc_ed != null)
+				return false;
+		} else if (!desc_ed.equals(other.desc_ed))
+			return false;
+		if (id_ed == null) {
+			if (other.id_ed != null)
+				return false;
+		} else if (!id_ed.equals(other.id_ed))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("EntidadDestino [id_ed=");
+		builder.append(id_ed);
+		builder.append(", desc_ed=");
+		builder.append(desc_ed);
+		builder.append("]");
+		return builder.toString();
+	}
+
+}

@@ -1,0 +1,77 @@
+package gob.servir.workflow.daoImpl;
+
+import gob.servir.workflow.dao.EntidadDestinoDao;
+import gob.servir.workflow.model.EntidadDestino;
+
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.faces.model.SelectItem;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+@Repository
+public class EntidadDestinoDaoImpl implements EntidadDestinoDao {
+
+	Connection conn = null;
+
+	@PersistenceContext
+	private EntityManager em;
+
+	@Transactional
+	public EntidadDestino find(Long id) {
+		return em.find(EntidadDestino.class, id);
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<EntidadDestino> getListaEntidad() {
+		Query q = (Query) em.createQuery("SELECT e FROM EntidadDestino e ");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA ENTIDAD DESTINO VACIO");
+			return null;
+		}
+	}
+
+	public List<SelectItem> getComboEntidad() {
+
+		List<SelectItem> listaCombo = new ArrayList<SelectItem>();
+		List<EntidadDestino> lista = new ArrayList<EntidadDestino>();
+		try {
+			lista = getListaEntidad();
+		} catch (Exception as) {
+			as.printStackTrace();
+			SelectItem fila = new SelectItem(0L, "Seleccione Entidad");
+			listaCombo.add(fila);
+			return listaCombo;
+		}
+		SelectItem fila = new SelectItem(0L, "Seleccione Entidad");
+		listaCombo.add(fila);
+
+		for (EntidadDestino tipo : lista) {
+			fila = new SelectItem(tipo.getId_ed(), tipo.getDesc_ed());
+			listaCombo.add(fila);
+		}
+		return listaCombo;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<EntidadDestino> buscarNombre(String nombre) {
+		Query q = (Query) em
+				.createQuery("SELECT e FROM EntidadDestino e WHERE UPPER(e.desc_ed) LIKE :valor ");
+		q.setParameter("valor", "%" + nombre.toUpperCase() + "%");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA GERENTE PUBLICO VACIO");
+			return null;
+		}
+	}
+
+}

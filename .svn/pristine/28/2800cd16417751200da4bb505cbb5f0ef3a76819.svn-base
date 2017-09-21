@@ -1,0 +1,180 @@
+package gob.servir.workflow.model;
+
+import java.io.Serializable;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+@Entity
+public class TipoDocumento implements Serializable {
+    
+	private static final long serialVersionUID = -2789862917569925785L;
+
+	@Id
+	private Long idTipoDocumento;
+	@Column
+	private String nombre;
+	
+	@Column
+	private String usuarioRegistra;
+	@Column
+	private String usuarioModifica;
+	@Column
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date fechaCreacion;
+	@Column
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date fechaModificacion;
+	
+	@Column
+	private String estado;
+
+	public TipoDocumento() {
+		super();
+	}
+
+	public TipoDocumento(String nombre, String estado) {
+		super();
+		this.nombre = nombre;
+		this.estado = estado;
+	}
+
+	public String getNombre() {
+		return nombre;
+	}
+
+	public void setNombre(String nombre) {
+		this.nombre = nombre.toUpperCase();
+	}
+
+	public String getEstado() {
+		return estado;
+	}
+
+	public void setEstado(String estado) {
+		this.estado = estado;
+	}
+
+	public Long getIdTipoDocumento() {
+		return idTipoDocumento;
+	}
+
+	public void setIdTipoDocumento(Long idTipoDocumento) {
+		this.idTipoDocumento = idTipoDocumento;
+	}	
+
+	public String getUsuarioRegistra() {
+		return usuarioRegistra;
+	}
+
+	public void setUsuarioRegistra(String usuarioRegistra) {
+		this.usuarioRegistra = usuarioRegistra;
+	}
+
+	public String getUsuarioModifica() {
+		return usuarioModifica;
+	}
+
+	public void setUsuarioModifica(String usuarioModifica) {
+		this.usuarioModifica = usuarioModifica;
+	}
+
+	public Date getFechaCreacion() {
+		return fechaCreacion;
+	}
+
+	public void setFechaCreacion(Date fechaCreacion) {
+		this.fechaCreacion = fechaCreacion;
+	}
+
+	public Date getFechaModificacion() {
+		return fechaModificacion;
+	}
+
+	public void setFechaModificacion(Date fechaModificacion) {
+		this.fechaModificacion = fechaModificacion;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((estado == null) ? 0 : estado.hashCode());
+		result = prime * result
+				+ ((fechaCreacion == null) ? 0 : fechaCreacion.hashCode());
+		result = prime
+				* result
+				+ ((fechaModificacion == null) ? 0 : fechaModificacion
+						.hashCode());
+		result = prime * result
+				+ ((idTipoDocumento == null) ? 0 : idTipoDocumento.hashCode());
+		result = prime * result + ((nombre == null) ? 0 : nombre.hashCode());
+		result = prime * result
+				+ ((usuarioModifica == null) ? 0 : usuarioModifica.hashCode());
+		result = prime * result
+				+ ((usuarioRegistra == null) ? 0 : usuarioRegistra.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		TipoDocumento other = (TipoDocumento) obj;
+		if (estado == null) {
+			if (other.estado != null)
+				return false;
+		} else if (!estado.equals(other.estado))
+			return false;
+		if (fechaCreacion == null) {
+			if (other.fechaCreacion != null)
+				return false;
+		} else if (!fechaCreacion.equals(other.fechaCreacion))
+			return false;
+		if (fechaModificacion == null) {
+			if (other.fechaModificacion != null)
+				return false;
+		} else if (!fechaModificacion.equals(other.fechaModificacion))
+			return false;
+		if (idTipoDocumento == null) {
+			if (other.idTipoDocumento != null)
+				return false;
+		} else if (!idTipoDocumento.equals(other.idTipoDocumento))
+			return false;
+		if (nombre == null) {
+			if (other.nombre != null)
+				return false;
+		} else if (!nombre.equals(other.nombre))
+			return false;
+		if (usuarioModifica == null) {
+			if (other.usuarioModifica != null)
+				return false;
+		} else if (!usuarioModifica.equals(other.usuarioModifica))
+			return false;
+		if (usuarioRegistra == null) {
+			if (other.usuarioRegistra != null)
+				return false;
+		} else if (!usuarioRegistra.equals(other.usuarioRegistra))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "TipoDocumento [idTipoDocumento=" + idTipoDocumento
+				+ ", nombre=" + nombre + ", usuarioRegistra=" + usuarioRegistra
+				+ ", usuarioModifica=" + usuarioModifica + ", fechaCreacion="
+				+ fechaCreacion + ", fechaModificacion=" + fechaModificacion
+				+ ", estado=" + estado + "]";
+	}
+
+	
+}

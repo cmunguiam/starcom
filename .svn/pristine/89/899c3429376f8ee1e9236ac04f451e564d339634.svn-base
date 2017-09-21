@@ -1,0 +1,226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions">
+<h:head>
+	<h:outputStylesheet name="css/cssContent.css" />
+</h:head>
+<h:body>
+
+	<p:growl id="messages" showDetail="true" life="40000" />
+	<p:focus context="datos" />
+	<p:panel id="datos" header="Atender Actividad">
+
+		<table cellpadding="2" cellspacing="2">
+			<tr>
+				<td><h:outputText value="N° Flujo: " style="font-weight:bold;" />
+					<h:outputText value="#{atenderFlujoController.atender.idFlujo}"
+						style="color:blue;" /></td>
+				<td><h:outputText value="Actividad: " style="font-weight:bold;" />
+					<h:outputText
+						value="
+						#{atenderFlujoController.atender.nombreActividad}"
+						style="color:blue;" /></td>
+			</tr>
+			<tr>
+				<td><h:outputText value="Descripción de actividad:"
+						style="font-weight:bold;" /></td>
+				<td><h:outputText
+						value="#{atenderFlujoController.atender.descripcionActividad}"
+						escape="false" style="white-space: normal;text-align: justify;" /></td>
+			</tr>
+			<tr>
+				<td><h:outputText value="Descripción de atención:"
+						style="font-weight:bold;" /></td>
+				<td><p:inputTextarea id="desc" rows="2" cols="90"
+						value="#{atenderFlujoController.bandeja.descripcion}"
+						maxlength="3500" tabindex="1">
+						<p:ajax event="blur"
+							actionListener="#{atenderFlujoController.bandeja.descripcion}" />
+					</p:inputTextarea></td>
+			</tr>
+		</table>
+
+		<p:panel id="fu" header="Adjuntar Documentos" toggleable="true"
+			visible="#{atenderFlujoController.condicion()}">
+			<table cellpadding="2" cellspacing="2">
+				<tr>
+					<td><h:outputText value="Tipo Doc. Pendientes:" /></td>
+					<td><p:selectOneMenu id="tipoDoc"
+							value="#{atenderFlujoController.docSelec}"
+							style=" width : 210px;" tabindex="2">
+							<f:selectItems value="#{atenderFlujoController.comboTipoDoc}" />
+							<p:ajax event="change" process="tipoDoc" update=":frm:upload"
+								actionListener="#{atenderFlujoController.docSelec}" />
+						</p:selectOneMenu></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="Número Doc.:" /></td>
+					<td><p:inputText id="nro"
+							value="#{atenderFlujoController.detalle.nroDoc}" maxlength="20"
+							style=" width : 200px;" tabindex="3">
+							<p:ajax event="blur"
+								actionListener="#{atenderFlujoController.detalle.nroDoc}" />
+						</p:inputText> &nbsp; <h:outputText value="Fecha Emisión:" />&nbsp; <p:calendar
+							id="cale" value="#{atenderFlujoController.detalle.fechaEmision}"
+							showOn="button" maxdate="#{atenderFlujoController.validarFecha}"
+							navigator="true" tabindex="4">
+							<p:ajax event="dateSelect"
+								actionListener="#{atenderFlujoController.detalle.fechaEmision}" />
+						</p:calendar></td>
+				</tr>
+
+				<tr>
+					<td><h:outputText value="Descripción Doc.:" /></td>
+					<td><p:inputTextarea rows="3" cols="85" id="des"
+							value="#{atenderFlujoController.detalle.descripcion}"
+							maxlength="600" queryDelay="400" minQueryLength="4" tabindex="5">
+							<p:ajax event="blur"
+								actionListener="#{atenderFlujoController.detalle.descripcion}" />
+						</p:inputTextarea></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="Adjuntar Doc.:" /></td>
+					<td><p:fileUpload id="upload"
+							disabled="#{ (atenderFlujoController.docSelec >0)? false:true}"
+							fileUploadListener="#{atenderFlujoController.handleFileUpload}"
+							mode="advanced" update="msgDoc" multiple="false"
+							label="Seleccionar" uploadLabel="Cargar" cacelLabel="Cancelar"
+							sizeLimit="10000000"
+							allowTypes="/(\.|\/)(doc|docx|xls|xlsx|pdf)$/" /> <h:outputText
+							id="msgDoc" value="#{atenderFlujoController.msgDoc}"
+							style="color:red;" update="messages" /></td>
+				</tr>
+			</table>
+			<p:separator />
+
+			<table cellpadding="0" cellspacing="0">
+				<tr>
+					<td><p:commandButton value="Agregar"
+							action="#{atenderFlujoController.agregar}" icon="ui-icon-plus"
+							immediate="true" update="dtList,fu,messages" process="@this"
+							tabindex="6" /></td>
+					<td><p:commandButton value="Limpiar"
+							action="#{atenderFlujoController.reset}" icon="ui-icon-close"
+							update="dtList,fu,messages" tabindex="7" /></td>
+				</tr>
+			</table>
+
+
+			<p:separator />
+			<p:dataTable var="row" value="#{atenderFlujoController.listDetalle}"
+				id="dtList" scrollable="true" scrollHeight="68" rows="5"
+				emptyMessage="#{messages.msgEmptyMessage}">
+				<!-- <p:column headerText="N°Flujo" style="width:12%">
+					<h:outputText value="#{row.bandeja.bandejaPK.idFlujo}" />
+				</p:column> -->
+				<p:column headerText="N°Doc." style="width:8%">
+					<h:outputText value="#{row.nroDoc}" />
+				</p:column>
+				<p:column headerText="Tipo Doc." style="width:10%">
+					<h:outputText value="#{row.tipoDocumento.nombre}" />
+				</p:column>
+				<p:column headerText="Descripción" style="width:30%">
+					<h:outputText value="#{row.descripcion}" />
+				</p:column>
+				<p:column headerText="Documento" style="width:30%">
+					<h:outputText value="#{row.urlDocumento}" />
+				</p:column>
+				<p:column headerText="Fecha" style="width:8%">
+					<h:outputText value="#{row.fechaEmision}" />
+				</p:column>
+				<p:column headerText="Opciones" style="width:15%">
+					<p:commandButton value="" onclick="confirmation.show()"
+						update="dtList,:frm:messages" icon="ui-icon ui-icon-trash"
+						title="Eliminar Documento Adjuntado" immediate="true">
+						<f:setPropertyActionListener value="#{row}"
+							target="#{atenderFlujoController.detalleSelec}" />
+					</p:commandButton>
+
+					<p:commandButton value="" icon="ui-icon-pencil" update=":frm:fu"
+						title="Editar Documento Adjuntado"
+						action="#{atenderFlujoController.editSelec}">
+						<f:setPropertyActionListener value="#{row}"
+							target="#{atenderFlujoController.detalle}" />
+						<f:setPropertyActionListener
+							value="#{row.tipoDocumento.idTipoDocumento}"
+							target="#{atenderFlujoController.docSelec}" />
+					</p:commandButton>
+				</p:column>
+			</p:dataTable>
+		</p:panel>
+		<p:separator />
+		<table style="width: 100%">
+			<tr>
+				<td align="left"><p:commandButton value="Guardar"
+						action="#{atenderFlujoController.guardarFlujo}" id="btnGuardar"
+						update=":frm:dtList,:frm:fu,:frm:messages,desc,btnAtender"
+						icon="ui-icon-disk" tabindex="8" /> <p:commandButton
+						value="Cancelar" update=":frm:dtList,:frm:fu,:frm:messages,desc"
+						action="#{atenderFlujoController.limpiar}" icon="ui-icon-close"
+						tabindex="9" /> <p:commandButton type="button"
+						onclick="lazyload()" value="Ir a bandeja"
+						icon="ui-icon-arrowreturnthick-1-w" tabindex="10" /></td>
+				<td align="right"><p:commandButton id="btnAtender"
+						update="btnAtender,btnSiAA,:frm:messages" inmediate="true"
+						value="Atender"
+						actionListener="#{atenderFlujoController.condicionAtender}"
+						icon="ui-icon-check" tabindex="11">
+					</p:commandButton></td>
+			</tr>
+		</table>
+		<p:separator />
+
+	</p:panel>
+
+	<p:remoteCommand name="lazyload" update=":frm:content">
+		<f:setPropertyActionListener
+			target="#{contenidoController.includedPage}"
+			value="contenido/bandeja.xhtml" />
+	</p:remoteCommand>
+
+	<p:confirmDialog id="confirmDialog"
+		message="#{messages.msgDocumentoEliminar}"
+		header="Eliminar Documento Adjunto" severity="alert"
+		widgetVar="confirmation">
+		<p:commandButton id="confirm" value="Si"
+			update=":frm:dtList,:frm:messages,:frm:desc"
+			oncomplete="confirmation.hide()"
+			actionListener="#{atenderFlujoController.eliminarDoc()}" />
+		<p:commandButton id="decline" value="No" onclick="confirmation.hide()"
+			type="button" />
+	</p:confirmDialog>
+
+	<p:confirmDialog message="¿Estás seguro de atender?" showEffect="fade"
+		hideEffect="fade" header="Atender Actividad" id="confirmDialogAA"
+		widgetVar="confirmacionAA">
+		<table style="width: 100%">
+			<tr>
+				<td align="center"><p:commandButton value="Si" id="btnSiAA"
+						inmediate="true" action="#{atenderFlujoController.atenderFlujo}"
+						style="width:50px" styleClass="ui-confirmdialog-yes"
+						update=":frm:btnSiAA,:frm:messages,:frm:datos"
+						icon="ui-icon-check">
+
+					</p:commandButton> <p:spacer width="10" /> <p:commandButton value="No"
+						style="width:50px" styleClass="ui-confirmdialog-no"
+						icon="ui-icon-close" onclick="confirmacionAA.hide()" /></td>
+			</tr>
+		</table>
+	</p:confirmDialog>
+
+	<p:remoteCommand name="lazyload2" update=":frm:content"
+		action="#{atenderFlujoController.mensajeAtender}">
+		<f:setPropertyActionListener
+			target="#{contenidoController.includedPage}"
+			value="contenido/bandeja.xhtml" />
+	</p:remoteCommand>
+
+
+
+</h:body>
+</html>

@@ -1,0 +1,212 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package gob.servir.workflow.model;
+
+import java.io.Serializable;
+import java.util.Date;
+
+import javax.persistence.*;
+
+/**
+ * 
+ * @author Hever Pumallihua
+ */
+@Entity
+public class Bandeja implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	@EmbeddedId
+	private BandejaPK bandejaPK;
+	@Column
+	private String usuarioRegistra;
+	@Column
+	private String usuarioModifica;
+	@Column
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date fechaCreacion;
+	@Column
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date fechaModificacion;
+	@Column(length = 4000)
+	private String descripcion;
+	@Column
+	private String estado;
+	@JoinColumn(name = "idFlujo", referencedColumnName = "idFlujo", insertable = false, updatable = false)
+	@ManyToOne(optional = false, fetch = FetchType.LAZY)
+	private Flujo flujo;
+	@JoinColumns({
+			@JoinColumn(name = "idActividad", referencedColumnName = "idActividad", insertable = false, updatable = false),
+			@JoinColumn(name = "idProceso", referencedColumnName = "idProceso", insertable = false, updatable = false) })
+	@ManyToOne(optional = false)
+	private Actividad actividad;
+
+	public Bandeja() {
+	}
+
+	public BandejaPK getBandejaPK() {
+		return bandejaPK;
+	}
+
+	public void setBandejaPK(BandejaPK bandejaPK) {
+		this.bandejaPK = bandejaPK;
+	}
+
+	public String getUsuarioRegistra() {
+		return usuarioRegistra;
+	}
+
+	public void setUsuarioRegistra(String usuarioRegistra) {
+		this.usuarioRegistra = usuarioRegistra;
+	}
+
+	public String getUsuarioModifica() {
+		return usuarioModifica;
+	}
+
+	public void setUsuarioModifica(String usuarioModifica) {
+		this.usuarioModifica = usuarioModifica;
+	}
+
+	public Date getFechaCreacion() {
+		return fechaCreacion;
+	}
+
+	public void setFechaCreacion(Date fechaCreacion) {
+		this.fechaCreacion = fechaCreacion;
+	}
+
+	public Date getFechaModificacion() {
+		return fechaModificacion;
+	}
+
+	public void setFechaModificacion(Date fechaModificacion) {
+		this.fechaModificacion = fechaModificacion;
+	}
+
+	public String getDescripcion() {
+		return descripcion;
+	}
+
+	public void setDescripcion(String descripcion) {
+		this.descripcion = descripcion;
+	}
+
+	public String getEstado() {
+		return estado;
+	}
+
+	public void setEstado(String estado) {
+		this.estado = estado;
+	}
+
+	public Flujo getFlujo() {
+		return flujo;
+	}
+
+	public void setFlujo(Flujo flujo) {
+		this.flujo = flujo;
+	}
+
+	public Actividad getActividad() {
+		return actividad;
+	}
+
+	public void setActividad(Actividad actividad) {
+		this.actividad = actividad;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((actividad == null) ? 0 : actividad.hashCode());
+		result = prime * result
+				+ ((bandejaPK == null) ? 0 : bandejaPK.hashCode());
+		result = prime * result
+				+ ((descripcion == null) ? 0 : descripcion.hashCode());
+		result = prime * result + ((estado == null) ? 0 : estado.hashCode());
+		result = prime * result
+				+ ((fechaCreacion == null) ? 0 : fechaCreacion.hashCode());
+		result = prime
+				* result
+				+ ((fechaModificacion == null) ? 0 : fechaModificacion
+						.hashCode());
+		result = prime * result + ((flujo == null) ? 0 : flujo.hashCode());
+		result = prime * result
+				+ ((usuarioModifica == null) ? 0 : usuarioModifica.hashCode());
+		result = prime * result
+				+ ((usuarioRegistra == null) ? 0 : usuarioRegistra.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Bandeja other = (Bandeja) obj;
+		if (actividad == null) {
+			if (other.actividad != null)
+				return false;
+		} else if (!actividad.equals(other.actividad))
+			return false;
+		if (bandejaPK == null) {
+			if (other.bandejaPK != null)
+				return false;
+		} else if (!bandejaPK.equals(other.bandejaPK))
+			return false;
+		if (descripcion == null) {
+			if (other.descripcion != null)
+				return false;
+		} else if (!descripcion.equals(other.descripcion))
+			return false;
+		if (estado == null) {
+			if (other.estado != null)
+				return false;
+		} else if (!estado.equals(other.estado))
+			return false;
+		if (fechaCreacion == null) {
+			if (other.fechaCreacion != null)
+				return false;
+		} else if (!fechaCreacion.equals(other.fechaCreacion))
+			return false;
+		if (fechaModificacion == null) {
+			if (other.fechaModificacion != null)
+				return false;
+		} else if (!fechaModificacion.equals(other.fechaModificacion))
+			return false;
+		if (flujo == null) {
+			if (other.flujo != null)
+				return false;
+		} else if (!flujo.equals(other.flujo))
+			return false;
+		if (usuarioModifica == null) {
+			if (other.usuarioModifica != null)
+				return false;
+		} else if (!usuarioModifica.equals(other.usuarioModifica))
+			return false;
+		if (usuarioRegistra == null) {
+			if (other.usuarioRegistra != null)
+				return false;
+		} else if (!usuarioRegistra.equals(other.usuarioRegistra))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "Bandeja [bandejaPK=" + bandejaPK + ", usuarioRegistra="
+				+ usuarioRegistra + ", usuarioModifica=" + usuarioModifica
+				+ ", fechaCreacion=" + fechaCreacion + ", fechaModificacion="
+				+ fechaModificacion + ", descripcion=" + descripcion
+				+ ", estado=" + estado + ", flujo=" + flujo + ", actividad="
+				+ actividad + "]";
+	}
+
+}

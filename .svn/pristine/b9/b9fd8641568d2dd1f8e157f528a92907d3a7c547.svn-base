@@ -1,0 +1,17 @@
+package gob.servir.workflow.dao;
+
+import gob.servir.workflow.model.ItemMenu;
+
+import java.util.List;
+
+public interface ItemMenuDao {
+	
+	public abstract ItemMenu find(Long id);
+	
+	public abstract ItemMenu save(ItemMenu obj);
+	
+	public abstract List<ItemMenu> getListaItemMenu();
+	
+	public abstract List<ItemMenu> getListaMenuItem(Long idMenu, Long idRol);
+
+}

@@ -1,0 +1,136 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+	<h:outputStylesheet name="css/cssContent.css" />
+</h:head>
+<h:body>
+	<p:growl id="messages" showDetail="true" life="40000" />
+	<p:panel id="datos" header="#{messages.lblTipoDoc}">
+		<p:focus context="datos" />
+		<table cellpadding="4" cellspacing="2">
+			<tr>
+				<td>#{messages.lblDenominacion}<h:outputText value="*"
+						styleClass="obligatorio" /></td>
+				<td><p:inputText id="tipoDocumento"
+						value="#{tipoDocumentoController.nuevoTipoDocumento.nombre}"
+						tabindex="1" maxlength="60"
+						style=" width : 200px; text-transform: uppercase;" /></td>
+				<td></td>
+			</tr>
+		</table>
+
+		<p:separator id="separator1" />
+		<h:panelGrid columns="2">
+			<p:commandButton value="#{messages.btnGuardar}"
+				action="#{tipoDocumentoController.guardar}" tabindex="2"
+				update="tipoDocumento,tipoDocumentoList,messages"
+				icon="ui-icon-disk" />
+			<p:commandButton id="clearButton" tabindex="3"
+				action="#{tipoDocumentoController.limpiar}"
+				value="#{messages.btnCancelar}" icon="ui-icon-close" update="datos" />
+		</h:panelGrid>
+
+		<p:separator id="separator2" />
+
+		<p:dataTable var="tipoDocumento"
+			value="#{tipoDocumentoController.listaTipoDocumento}"
+			id="tipoDocumentoList" scrollable="true" scrollHeight="310"
+			paginator="true" rows="14"
+			paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			rowsPerPageTemplate="5,10,15"
+			emptyMessage="#{messages.msgEmptyMessage}">
+
+			<f:facet name="header">  
+           #{messages.lblListTipoDoc}
+        </f:facet>
+
+			<p:column headerText="#{messages.lblCodigo}" style="width:13%"
+				sortBy="#{tipoDocumento.idTipoDocumento}">
+				<h:outputText value="#{tipoDocumento.idTipoDocumento}" />
+			</p:column>
+
+			<p:column headerText="#{messages.lblDenominacion}" style="width:45%"
+				sortBy="#{tipoDocumento.nombre}">
+				<h:outputText value="#{tipoDocumento.nombre}" />
+			</p:column>
+
+			<p:column headerText="#{messages.lblEstado}" style="width:13%"
+				sortBy="{#tipoDocumento.estado}">
+				<h:outputText
+					value="#{tipoDocumento.estado.equals('A')?'Activo':'Inactivo'} "
+					sortBy="{#tipoDocumento.estado}" />
+			</p:column>
+
+			<p:column headerText="Opciones" style="width:13%">
+
+				<p:commandButton value="" icon="ui-icon-pencil"
+					action="#{tipoDocumentoController.editSelec}" update=":frm:pnlEdit"
+					oncomplete="editDialog.show()" title="Editar">
+					<f:setPropertyActionListener value="#{tipoDocumento}"
+						target="#{tipoDocumentoController.tipoDocumentoSelec}" />
+				</p:commandButton>
+			</p:column>
+
+
+
+		</p:dataTable>
+	</p:panel>
+	<p:confirmDialog id="confirmDialog"
+		message="#{messages.msgDocumentoEliminar}"
+		header="#{messages.lblDocumentoEliminar}" severity="alert"
+		widgetVar="confirmation">
+
+		<p:commandButton id="confirm" value="Si"
+			update=":frm:tipoDocumentoList" oncomplete="confirmation.hide()"
+			actionListener="#{tipoDocumentoController.eliminar()}" />
+		<p:commandButton id="decline" value="No" onclick="confirmation.hide()"
+			type="button" />
+	</p:confirmDialog>
+
+
+	<p:dialog id="dlgEdit" header="#{messages.lblDocumentoModificar}"
+		widgetVar="editDialog" modal="true" resizable="false" width="370"
+		showEffect="clip" closable="true" hideEffect="fold">
+
+		<p:focus context="pnlEdit" />
+
+		<p:panel id="pnlEdit">
+			<table cellpadding="2" cellspacing="2">
+				<tr>
+					<td><h:outputText value="#{messages.lblCodigo}" /></td>
+					<td><h:outputText
+							value="#{tipoDocumentoController.modifica.idTipoDocumento}" /></td>
+				</tr>
+				<tr>
+					<td>#{messages.lblDenominacion}<h:outputText value="*"
+							styleClass="obligatorio" /></td>
+					<td><p:inputText
+							value="#{tipoDocumentoController.modifica.nombre}" maxlength="60"
+							style=" width : 180px;" /></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="#{messages.lblEstado}" /></td>
+					<td><p:selectOneMenu
+							value="#{tipoDocumentoController.modifica.estado}"
+							style=" width : 190px;" tabindex="5">
+							<f:selectItems value="#{tipoDocumentoController.comboEstado}" />
+						</p:selectOneMenu></td>
+				</tr>
+			</table>
+
+			<f:facet name="footer">
+				<p:commandButton update="tipoDocumentoList,messages"
+					value="#{messages.btnModificar}"
+					actionListener="#{tipoDocumentoController.modificar}"
+					icon="ui-icon-check" oncomplete="editDialog.hide()" tabindex="6" />
+			</f:facet>
+		</p:panel>
+	</p:dialog>
+
+</h:body>
+</html>

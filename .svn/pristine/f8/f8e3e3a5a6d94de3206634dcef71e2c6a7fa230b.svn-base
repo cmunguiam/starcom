@@ -1,0 +1,113 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package gob.servir.workflow.model;
+
+import java.io.Serializable;
+
+import javax.persistence.*;
+
+/**
+ * 
+ * @author Hever
+ */
+@Entity
+public class Proceso implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	private Long idProceso;
+	@Column
+	private String nombre;
+	@Column
+	private String tipo;
+	@Column
+	private String estado;
+
+	public Proceso() {
+	}
+
+	public Long getIdProceso() {
+		return idProceso;
+	}
+
+	public void setIdProceso(Long idProceso) {
+		this.idProceso = idProceso;
+	}
+
+	public String getNombre() {
+		return nombre;
+	}
+
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
+	}
+
+	public String getTipo() {
+		return tipo;
+	}
+
+	public void setTipo(String tipo) {
+		this.tipo = tipo;
+	}
+
+	public String getEstado() {
+		return estado;
+	}
+
+	public void setEstado(String estado) {
+		this.estado = estado;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((estado == null) ? 0 : estado.hashCode());
+		result = prime * result
+				+ ((idProceso == null) ? 0 : idProceso.hashCode());
+		result = prime * result + ((nombre == null) ? 0 : nombre.hashCode());
+		result = prime * result + ((tipo == null) ? 0 : tipo.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Proceso other = (Proceso) obj;
+		if (estado == null) {
+			if (other.estado != null)
+				return false;
+		} else if (!estado.equals(other.estado))
+			return false;
+		if (idProceso == null) {
+			if (other.idProceso != null)
+				return false;
+		} else if (!idProceso.equals(other.idProceso))
+			return false;
+		if (nombre == null) {
+			if (other.nombre != null)
+				return false;
+		} else if (!nombre.equals(other.nombre))
+			return false;
+		if (tipo == null) {
+			if (other.tipo != null)
+				return false;
+		} else if (!tipo.equals(other.tipo))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "Proceso [idProceso=" + idProceso + ", nombre=" + nombre
+				+ ", tipo=" + tipo + ", estado=" + estado + "]";
+	}
+
+}

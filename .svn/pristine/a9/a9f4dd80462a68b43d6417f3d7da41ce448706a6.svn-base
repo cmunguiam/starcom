@@ -1,0 +1,1423 @@
+package gob.servir.workflow.controller;
+
+import gob.servir.workflow.bean.ModelTableBandeja;
+import gob.servir.workflow.dao.ActividadDao;
+import gob.servir.workflow.dao.BandejaDao;
+import gob.servir.workflow.dao.DetalleActividadDao;
+import gob.servir.workflow.dao.DocumentoDao;
+import gob.servir.workflow.dao.FlujoDao;
+import gob.servir.workflow.dao.TipoDocumentoDao;
+import gob.servir.workflow.model.ActividadPK;
+import gob.servir.workflow.model.Bandeja;
+import gob.servir.workflow.model.BandejaPK;
+import gob.servir.workflow.model.DetalleActividad;
+import gob.servir.workflow.model.Documento;
+import gob.servir.workflow.model.Flujo;
+import gob.servir.workflow.model.TipoDocumento;
+import gob.servir.workflow.model.Usuario;
+import gob.servir.workflow.util.Archivo;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
+
+import org.primefaces.context.RequestContext;
+import org.primefaces.event.FileUploadEvent;
+import org.primefaces.model.UploadedFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+@Component("atenderFlujoController")
+@Scope("session")
+public class AtenderFlujoController {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(AtenderFlujoController.class);
+
+	@Autowired
+	private BandejaDao bandejaDao;
+	@Autowired
+	private DocumentoDao detalleBandejaDao;
+	@Autowired
+	private TipoDocumentoDao tipoDocDao;
+	@Autowired
+	private ActividadDao actividadDao;
+	@Autowired
+	private DetalleActividadDao detalleActDao;
+	@Autowired
+	private FlujoDao flujoDao;
+
+	private Bandeja bandeja = new Bandeja();
+	private Documento detalle = new Documento();
+	private Documento detalleSelec = null;
+	private ModelTableBandeja atender = null;
+	private ModelTableBandeja atender2 = new ModelTableBandeja();
+	private List<Documento> listDetalle = new ArrayList<Documento>();
+
+	private List<SelectItem> comboTipoDoc = new ArrayList<SelectItem>();
+	private Long docSelec = 0L;
+	private List<DetalleActividad> listTipoDocPendientes;
+
+	private List<SelectItem> comboCompuerta = new ArrayList<SelectItem>();
+	private String opcionComp = "2";
+	private String descripcion = "";
+
+	private Date validarFecha = new Date();
+
+	// fileUpload
+	private String fileName = "";
+	private byte[] bFile;
+	private String msgDoc = "";
+
+	private Usuario userSesion = null;
+	private FacesMessage msg = null;
+	private boolean swListaDetalle = true;
+	private Boolean swAtenderAct = false;
+	private Long rolSelec = 0L;
+	private Boolean swAtenderActRol = false;
+	private Bandeja objBandejaConcluir = null;
+
+	public AtenderFlujoController() {
+
+	}
+
+	public ModelTableBandeja getAtender2() {
+		return atender2;
+	}
+
+	public void setAtender2(ModelTableBandeja atender2) {
+		this.atender2 = atender2;
+	}
+
+	public Long getRolSelec() {
+		return rolSelec;
+	}
+
+	public void setRolSelec(Long rolSelec) {
+		this.rolSelec = rolSelec;
+	}
+
+	public Boolean getSwAtenderActRol() {
+		return swAtenderActRol;
+	}
+
+	public void setSwAtenderActRol(Boolean swAtenderActRol) {
+		this.swAtenderActRol = swAtenderActRol;
+	}
+
+	public boolean condicion() {
+
+		if (atender != null) {
+			ActividadPK id = new ActividadPK(atender.getIdActividad(),
+					atender.getIdProceso());
+
+			listTipoDocPendientes = detalleActDao.getListaDetalleActividad(id);
+
+			if (listTipoDocPendientes.size() > 0)
+				return true;
+			else
+				return false;
+		}
+
+		return false;
+
+	}
+
+	public Boolean getSwAtenderAct() {
+		return swAtenderAct;
+	}
+
+	public void setSwAtenderAct(Boolean swAtenderAct) {
+		this.swAtenderAct = swAtenderAct;
+	}
+
+	public void condicionAtender() {
+
+		validarSesion();
+
+		if (atender.getTipo().equalsIgnoreCase("A")) {
+
+			if (!validarAtenderValid())
+				swAtenderAct = false;
+
+			if (!swAtenderAct) {
+
+				msg = new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"ADVERTENCIA", "Primero haga click en guardar");
+				FacesContext.getCurrentInstance().addMessage(null, msg);
+				return;
+			} else {
+
+				RequestContext.getCurrentInstance().execute(
+						"confirmacionAA.show()");
+
+			}
+
+		}
+
+	}
+
+	public void condicionAtenderValid() {
+
+		if (atender.getTipo().equalsIgnoreCase("A")) {
+			if (validarAtenderValid()) {
+				swAtenderAct = true;
+
+			} else {
+
+				swAtenderAct = false;
+			}
+		}
+
+	}
+
+	public boolean isSwListaDetalle() {
+
+		if (atender != null) {
+			ActividadPK id = new ActividadPK(atender.getIdActividad(),
+					atender.getIdProceso());
+
+			listTipoDocPendientes = detalleActDao.getListaDetalleActividad(id);
+
+			// if(listTipoDocPendientes.size()>0)
+
+		}
+
+		return swListaDetalle;
+	}
+
+	public void setSwListaDetalle(boolean swListaDetalle) {
+		this.swListaDetalle = swListaDetalle;
+	}
+
+	public String getMsgDoc() {
+
+		if (bFile == null)
+			msgDoc = "";
+
+		return msgDoc;
+	}
+
+	public void setMsgDoc(String msgDoc) {
+		this.msgDoc = msgDoc;
+	}
+
+	public Documento getDetalleSelec() {
+		return detalleSelec;
+	}
+
+	public void setDetalleSelec(Documento detalleSelec) {
+		this.detalleSelec = detalleSelec;
+	}
+
+	public Date getValidarFecha() {
+		return validarFecha;
+	}
+
+	public void setValidarFecha(Date validarFecha) {
+		this.validarFecha = validarFecha;
+	}
+
+	public String getDescripcion() {
+		return descripcion;
+	}
+
+	public void setDescripcion(String descripcion) {
+		this.descripcion = descripcion;
+	}
+
+	public List<SelectItem> getComboCompuerta() {
+		comboCompuerta = new ArrayList<SelectItem>();
+		SelectItem item = null;
+		item = new SelectItem("1", "Si");
+		comboCompuerta.add(item);
+		item = new SelectItem("2", "No");
+		comboCompuerta.add(item);
+		return comboCompuerta;
+	}
+
+	public void setComboCompuerta(List<SelectItem> comboCompuerta) {
+		this.comboCompuerta = comboCompuerta;
+	}
+
+	public String getOpcionComp() {
+		return opcionComp;
+	}
+
+	public void setOpcionComp(String opcionComp) {
+		this.opcionComp = opcionComp;
+	}
+
+	public Long getdocSelec() {
+		return docSelec;
+	}
+
+	public void setdocSelec(Long docSelec) {
+		this.docSelec = docSelec;
+	}
+
+	public Documento getDetalle() {
+		return detalle;
+	}
+
+	public void setDetalle(Documento detalle) {
+		this.detalle = detalle;
+	}
+
+	public List<Documento> getListDetalle() {
+
+		listDetalle = new ArrayList<Documento>();
+		if (atender != null) {
+			BandejaPK bandejaPK = new BandejaPK(atender.getIdFlujo(),
+					atender.getIdActividad(), atender.getIdProceso(),
+					atender.getCorrelativo());
+			listDetalle = detalleBandejaDao.getListaDetalleBandeja(bandejaPK);
+
+		}
+
+		return listDetalle;
+	}
+
+	public void setListDetalle(List<Documento> listDetalle) {
+		this.listDetalle = listDetalle;
+	}
+
+	public ModelTableBandeja getAtender() {
+		return atender;
+
+	}
+
+	public void setAtender(ModelTableBandeja atender) {
+		this.atender = atender;
+	}
+
+	public void validarSesion() {
+		FacesContext context = FacesContext.getCurrentInstance();
+		userSesion = (Usuario) context.getExternalContext().getSessionMap()
+				.get("userSesion");
+
+		if (userSesion == null) {
+			String ctxPath = context.getExternalContext()
+					.getRequestContextPath();
+			try {
+				context.getExternalContext().redirect(ctxPath + "/login.jsf");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public Bandeja getBandeja() {
+		return bandeja;
+	}
+
+	public void setBandeja(Bandeja bandeja) {
+		this.bandeja = bandeja;
+	}
+
+	public List<SelectItem> getComboTipoDoc() {
+		listTipoDocPendientes = new ArrayList<DetalleActividad>();
+
+		comboTipoDoc = new ArrayList<SelectItem>();
+
+		SelectItem fila = new SelectItem(0L,
+				"Seleccione tipo documento pendiente");
+		comboTipoDoc.add(fila);
+
+		try {
+			if (atender != null) {
+				ActividadPK id = new ActividadPK(atender.getIdActividad(),
+						atender.getIdProceso());
+
+				listTipoDocPendientes = detalleActDao
+						.getListaDetalleActividad(id);
+
+				for (DetalleActividad detalle : listTipoDocPendientes) {
+					fila = new SelectItem(detalle.getTipoDocumento()
+							.getIdTipoDocumento(), detalle.getTipoDocumento()
+							.getNombre());
+					comboTipoDoc.add(fila);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return comboTipoDoc;
+	}
+
+	public void setComboTipoDoc(List<SelectItem> comboTipoDoc) {
+		this.comboTipoDoc = comboTipoDoc;
+	}
+
+	public void atenderSelec() {
+
+		System.out.println("Aqui atenderSelec");
+		try {
+			bandeja = new Bandeja();
+			detalle = new Documento();
+			docSelec = 0L;
+			fileName = "";
+			bFile = null;
+
+			bandeja.setDescripcion(atender.getDescripcion());
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void atenderFlujo() {
+
+		validarSesion();
+		Bandeja objBandeja = null;
+		int resultado = 0;
+
+		Bandeja objBandejaRol = null;
+		BandejaPK objBandejaPKRol = null;
+		Bandeja objBandejaConcluir = null;
+		Long rolSelec2 = 0L;
+		Long idSubProceso = 0L;
+		swAtenderActRol = false;
+
+		try {
+
+			if (atender == null) {
+				msg = new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"ADVERTENCIA",
+						"La actividad ya fue atendida. Debe ir a su bandeja");
+				FacesContext.getCurrentInstance().addMessage(null, msg);
+				return;
+			}
+
+			if (atender.getTipo().equalsIgnoreCase("A")) {
+				if (!validarAtender()) {
+					return;
+				}
+			}
+
+			BandejaPK id = new BandejaPK(atender.getIdFlujo(),
+					atender.getIdActividad(), atender.getIdProceso(),
+					atender.getCorrelativo());
+
+			objBandeja = bandejaDao.find(id);
+
+			if (atender.getTipo().equalsIgnoreCase("A")) {
+				objBandeja.setDescripcion(bandeja.getDescripcion());
+			} else {
+				objBandeja.setDescripcion(descripcion);
+			}
+			objBandeja.setEstado("AT");
+			objBandeja.setFechaModificacion(new Date());
+			objBandeja.setUsuarioModifica(userSesion.getUsuario());
+
+			if (atender.getIdProceso() == 1L) {// Asignacion abreviada
+
+				resultado = logicaAsignacionAbreviada(objBandeja);
+
+				if (resultado == 1) {
+					msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "EXITO",
+							"Actividad/Compuerta atendido con exito");
+					FacesContext.getCurrentInstance().addMessage(null, msg);
+				} else if (resultado == 2) {
+					msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+							"ERROR",
+							"Ha ocurrido un error al atender Actividad/Compuerta");
+					FacesContext.getCurrentInstance().addMessage(null, msg);
+					return;
+				} else if (resultado == 3) {
+					msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+							"ADVERTENCIA",
+							"Primero debe atender los requisitos de la actividad.");
+					FacesContext.getCurrentInstance().addMessage(null, msg);
+					return;
+				} else {
+					return;
+				}
+			} else if (atender.getIdProceso() == 2L) {// Resolucion
+
+				if (logicaResolucion(objBandeja)) {
+					msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "EXITO",
+							"Actividad/Compuerta atendido con exito");
+					FacesContext.getCurrentInstance().addMessage(null, msg);
+				} else {
+					msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+							"ERROR",
+							"Ha ocurrido un error al atender Actividad/Compuerta");
+					FacesContext.getCurrentInstance().addMessage(null, msg);
+					return;
+				}
+			} else if (atender.getIdProceso() == 3L) {// Convenio
+				resultado = logicaConvenio(objBandeja);
+				if (resultado == 1) {
+					msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "EXITO",
+							"Actividad/Compuerta atendido con exito");
+					FacesContext.getCurrentInstance().addMessage(null, msg);
+				} else if (resultado == 2) {
+					msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+							"ERROR",
+							"Ha ocurrido un error al atender Actividad/Compuerta");
+					FacesContext.getCurrentInstance().addMessage(null, msg);
+					return;
+				} else if (resultado == 3) {// Act 5 y 6
+					msg = new FacesMessage(FacesMessage.SEVERITY_WARN,
+							"ADVERTENCIA",
+							"Primero debe atender los requisitos de la actividad..");
+					FacesContext.getCurrentInstance().addMessage(null, msg);
+					return;
+				} else if (resultado == 4) {// Act 8 y 9
+					msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+							"ADVERTENCIA",
+							"Primero debe atender los requisitos de la actividad.");
+					FacesContext.getCurrentInstance().addMessage(null, msg);
+					return;
+				} else
+					return;
+			} else {
+				return;
+			}
+
+			rolSelec2 = userSesion.getRol().getIdRol();
+
+			if (objBandeja.getBandejaPK().getIdProceso() == 1L) {
+
+				if (objBandeja.getBandejaPK().getIdActividad() == 27L
+						|| objBandeja.getBandejaPK().getIdActividad() == 16L
+						|| objBandeja.getBandejaPK().getIdActividad() == 30L) {
+
+					if (objBandeja.getBandejaPK().getIdActividad() == 27L
+							|| objBandeja.getBandejaPK().getIdActividad() == 16L) {
+						idSubProceso = 2L;// Resolucion
+					} else if (objBandeja.getBandejaPK().getIdActividad() == 30L) {
+						idSubProceso = 3L;// Convenio
+					}
+
+					objBandejaPKRol = new BandejaPK(objBandeja.getBandejaPK()
+							.getIdFlujo(), 1L, idSubProceso, objBandeja
+							.getBandejaPK().getCorrelativo() + 2L);
+
+					objBandejaRol = bandejaDao.find(objBandejaPKRol);
+
+				} else if (objBandeja.getBandejaPK().getIdActividad() == 12L) {
+
+					objBandejaPKRol = new BandejaPK(objBandeja.getBandejaPK()
+							.getIdFlujo(), objBandeja.getBandejaPK()
+							.getIdActividad() + 6L, objBandeja.getBandejaPK()
+							.getIdProceso(), objBandeja.getBandejaPK()
+							.getCorrelativo() + 1L);
+
+					objBandejaRol = bandejaDao.find(objBandejaPKRol);
+
+				} else if (atender.getIdActividad() == 33) {
+					objBandejaRol = null;
+				} else if (atender.getIdActividad() == 34) {
+					objBandejaRol = null;
+
+				} else {
+
+					objBandejaPKRol = new BandejaPK(objBandeja.getBandejaPK()
+							.getIdFlujo(), objBandeja.getBandejaPK()
+							.getIdActividad() + 1L, objBandeja.getBandejaPK()
+							.getIdProceso(), objBandeja.getBandejaPK()
+							.getCorrelativo() + 1L);
+
+					objBandejaRol = bandejaDao.find(objBandejaPKRol);
+
+				}
+			}
+
+			if (objBandeja.getBandejaPK().getIdProceso() == 2L) {
+
+				if (objBandeja.getBandejaPK().getIdActividad() == 23L) {
+
+					objBandejaPKRol = new BandejaPK(objBandeja.getBandejaPK()
+							.getIdFlujo(), this.objBandejaConcluir
+							.getBandejaPK().getIdActividad() + 1L, 1L,
+							objBandeja.getBandejaPK().getCorrelativo() + 1L);
+
+					objBandejaRol = bandejaDao.find(objBandejaPKRol);
+
+				} else {
+
+					objBandejaPKRol = new BandejaPK(objBandeja.getBandejaPK()
+							.getIdFlujo(), objBandeja.getBandejaPK()
+							.getIdActividad() + 1L, objBandeja.getBandejaPK()
+							.getIdProceso(), objBandeja.getBandejaPK()
+							.getCorrelativo() + 1L);
+
+					objBandejaRol = bandejaDao.find(objBandejaPKRol);
+
+				}
+
+			}
+
+			if (objBandeja.getBandejaPK().getIdProceso() == 3L) {
+
+				if (atender.getIdActividad() == 5L) {
+
+					BandejaPK id5 = new BandejaPK(atender.getIdFlujo(),
+							atender.getIdActividad() + 2,
+							atender.getIdProceso(),
+							atender.getCorrelativo() + 2);
+
+					objBandejaRol = bandejaDao.find(id5);
+
+				} else if (atender.getIdActividad() == 6L) {
+
+					BandejaPK id6 = new BandejaPK(atender.getIdFlujo(),
+							atender.getIdActividad() + 1,
+							atender.getIdProceso(),
+							atender.getCorrelativo() + 1);
+
+					objBandejaRol = bandejaDao.find(id6);
+
+				} else if (atender.getIdActividad() == 8L) {
+
+					BandejaPK id8 = new BandejaPK(atender.getIdFlujo(),
+							atender.getIdActividad() + 2,
+							atender.getIdProceso(),
+							atender.getCorrelativo() + 2);
+
+					objBandejaRol = bandejaDao.find(id8);
+
+				} else if (atender.getIdActividad() == 9L) {
+
+					BandejaPK id9 = new BandejaPK(atender.getIdFlujo(),
+							atender.getIdActividad() + 1,
+							atender.getIdProceso(),
+							atender.getCorrelativo() + 1);
+
+					objBandejaRol = bandejaDao.find(id9);
+
+				} else {
+
+					objBandejaPKRol = new BandejaPK(objBandeja.getBandejaPK()
+							.getIdFlujo(), objBandeja.getBandejaPK()
+							.getIdActividad() + 1L, objBandeja.getBandejaPK()
+							.getIdProceso(), objBandeja.getBandejaPK()
+							.getCorrelativo() + 1L);
+
+					objBandejaRol = bandejaDao.find(objBandejaPKRol);
+
+				}
+
+			}
+
+			if (objBandejaRol != null) {
+
+				rolSelec = objBandejaRol.getActividad().getRol().getIdRol();
+
+				if (rolSelec != rolSelec2) {
+
+					RequestContext.getCurrentInstance().execute(
+							"confirmacionAA.hide()");
+
+					RequestContext.getCurrentInstance().execute("lazyload2()");
+
+					atender = null;
+					bandeja = new Bandeja();
+				} else {
+					//
+					atender.setIdActividad(objBandejaRol.getBandejaPK()
+							.getIdActividad());
+					atender.setIdFlujo(objBandejaRol.getBandejaPK()
+							.getIdFlujo());
+					atender.setIdProceso(objBandejaRol.getBandejaPK()
+							.getIdProceso());
+					atender.setCorrelativo(objBandejaRol.getBandejaPK()
+							.getCorrelativo());
+					atender.setDescripcionActividad(objBandejaRol
+							.getActividad().getDescripcion());
+					atender.setNombreActividad(objBandejaRol.getActividad()
+							.getNombre());
+					bandeja.setDescripcion(objBandejaRol.getDescripcion());
+
+					if (objBandejaRol.getActividad().getTipo()
+							.equalsIgnoreCase("A")) {
+
+						RequestContext.getCurrentInstance().execute(
+								"confirmacionAA.hide()");
+
+					} else {
+
+						RequestContext.getCurrentInstance().execute(
+								"confirmacionAA.hide()");
+						RequestContext.getCurrentInstance().execute(
+								"lazyload2()");
+
+					}
+
+				}
+
+			} else {
+
+				RequestContext.getCurrentInstance().execute(
+						"confirmacionAA.hide()");
+				RequestContext.getCurrentInstance().execute("lazyload2()");
+
+			}
+
+			listDetalle = new ArrayList<Documento>();
+			swAtenderAct = false;
+
+			System.out.println("AQUI PEXXXX");
+		} catch (Exception e) {
+			e.printStackTrace();
+			msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "ERROR",
+					"Ha ocurrido un error al atender Actividad/Compuerta");
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+			return;
+		}
+
+	}
+
+	public void guardarFlujo() {
+
+		validarSesion();
+		Bandeja objBandeja = null;
+		swAtenderAct = false;
+
+		try {
+
+			if (atender == null) {
+				msg = new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"ADVERTENCIA",
+						"La actividad ya fue atendida. Debe ir a su bandeja");
+				FacesContext.getCurrentInstance().addMessage(null, msg);
+				return;
+			}
+
+			if (atender.getTipo().equalsIgnoreCase("A")) {
+				if (!validarAtender()) {
+					return;
+				}
+			}
+
+			BandejaPK id = new BandejaPK(atender.getIdFlujo(),
+					atender.getIdActividad(), atender.getIdProceso(),
+					atender.getCorrelativo());
+
+			objBandeja = bandejaDao.find(id);
+
+			if (atender.getTipo().equalsIgnoreCase("A")) {
+				objBandeja.setDescripcion(bandeja.getDescripcion());
+			} else {
+				objBandeja.setDescripcion(descripcion);
+			}
+
+			objBandeja.setFechaModificacion(new Date());
+			objBandeja.setUsuarioModifica(userSesion.getUsuario());
+
+			bandejaDao.save(objBandeja);
+
+			msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "EXITO",
+					"Registro exitoso.");
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+			swAtenderAct = true;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "ERROR",
+					"Ha ocurrido un error al guardar.");
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+			return;
+		}
+
+	}
+
+	@Transactional
+	private int logicaAsignacionAbreviada(Bandeja paramBandeja) {
+		int resultado = 0;
+		Long idSgteAct = null;
+		Long correlativo = null;
+		Bandeja objBandeja = null;
+		BandejaPK bandejaPK = null;
+		int opcion = paramBandeja.getBandejaPK().getIdActividad().intValue();
+
+		try {
+			switch (opcion) {
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+				if (bandejaDao.atenderActividad(paramBandeja))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 8:
+				if (bandejaDao.atenderCompuertaInclusiva(paramBandeja,
+						opcionComp))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 9:
+			case 10:
+			case 11:
+				if (bandejaDao.atenderActividad(paramBandeja))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 12:
+
+				idSgteAct = paramBandeja.getBandejaPK().getIdActividad() + 1;
+				// correlativo = paramBandeja.getBandejaPK().getCorrelativo() +
+				// 1;
+				// correlativo = 64L;// cambiar si se agrega mas actividades
+				correlativo = 13L;// cambiar si se agrega mas actividades
+
+				bandejaPK = new BandejaPK(paramBandeja.getBandejaPK()
+						.getIdFlujo(), idSgteAct, paramBandeja.getBandejaPK()
+						.getIdProceso(), correlativo);
+
+				objBandeja = bandejaDao.find(bandejaPK);
+
+				if (objBandeja != null) {
+					if (bandejaDao.atenderCompuertaParalela(paramBandeja, 0))
+						resultado = 1;
+					else
+						resultado = 2;
+				} else {
+					if (bandejaDao.atenderActividadNro12(paramBandeja))
+						resultado = 1;
+					else
+						resultado = 2;
+				}
+				break;
+			case 13:
+				if (bandejaDao.atenderCompuertaExclusiva(paramBandeja,
+						opcionComp))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 14:
+				// no va llegar a esta opcion
+				break;
+			case 15:
+				if (bandejaDao.atenderActividad(paramBandeja))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 16:
+				if (bandejaDao.atenderActividadNro27y30(paramBandeja, 16L))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 17:
+				// no va llegar a esta opcion
+				break;
+			case 18:
+
+				objBandeja = bandejaDao.getBandeja(paramBandeja.getBandejaPK()
+						.getIdFlujo(), 1L, 12L);
+
+				if (objBandeja != null) {
+					if (objBandeja.getEstado().equalsIgnoreCase("AT")) {
+						if (bandejaDao.atenderActividad(paramBandeja))
+							resultado = 1;
+						else
+							resultado = 2;
+					} else {
+						resultado = 3;
+					}
+				} else {
+					resultado = 3;
+				}
+
+				break;
+			case 19:
+			case 20:
+			case 21:
+			case 22:
+			case 23:
+			case 24:
+			case 25:
+			case 26:
+				if (bandejaDao.atenderActividad(paramBandeja))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 27:
+				if (bandejaDao.atenderActividadNro27y30(paramBandeja, 27L))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 28:
+				// no va llegar a esta opcion
+				break;
+			case 29:
+				if (bandejaDao.atenderActividad(paramBandeja))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 30:
+				if (bandejaDao.atenderActividadNro27y30(paramBandeja, 30L))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+
+			case 31:
+				// no va llegar a esta opcion
+				break;
+			case 32:
+				if (bandejaDao.atenderCompuertaParalela(paramBandeja, 1))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 33:
+				if (bandejaDao.atenderCompuertaParalela(paramBandeja, 4))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 34:
+				if (bandejaDao.atenderCompuertaParalela(paramBandeja, 5))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			default:
+				break;
+			}
+		} catch (Exception e) {
+			resultado = 2;
+			e.printStackTrace();
+			return resultado;
+		}
+		return resultado;
+	}
+
+	public boolean validarAtender() {
+
+		if (bandeja.getDescripcion() == null
+				|| bandeja.getDescripcion().equalsIgnoreCase("")) {
+			msg = new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+					"Ingrese descripción de atención.");
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+			return false;
+		}
+
+		if (condicion() == true) {
+			if (listTipoDocPendientes.size() > 0) {
+				if (listDetalle.size() == 0) {
+					msg = new FacesMessage(FacesMessage.SEVERITY_WARN,
+							"ADVERTENCIA",
+							"Debe adjuntar al menos un documento.");
+					FacesContext.getCurrentInstance().addMessage(null, msg);
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+	public boolean validarAtenderValid() {
+
+		if (bandeja.getDescripcion() == null
+				|| bandeja.getDescripcion().equalsIgnoreCase("")) {
+
+			return false;
+		}
+
+		if (condicion() == true) {
+			if (listTipoDocPendientes.size() > 0) {
+				if (listDetalle.size() == 0) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+	public void atenderCompuerta() {
+		validarSesion();
+		Bandeja objBandeja = null;
+		int resultado = 0;
+
+		System.out.println("ATender");
+		try {
+
+			if (atender == null) {
+				return;
+			}
+
+			BandejaPK id = new BandejaPK(atender.getIdFlujo(),
+					atender.getIdActividad(), atender.getIdProceso(),
+					atender.getCorrelativo());
+
+			objBandeja = bandejaDao.find(id);
+
+			// bandeja.setBandejaPK(id);
+			objBandeja.setDescripcion(descripcion);
+			objBandeja.setEstado("AT");
+			objBandeja.setFechaCreacion(new Date());
+			objBandeja.setUsuarioModifica(userSesion.getUsuario());
+
+			if (atender.getIdProceso() == 1L) {// Asignacion abreviada
+
+				resultado = logicaAsignacionAbreviada(objBandeja);
+				if (resultado == 1) {
+					msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "EXITO",
+							"Actividad/Compuerta atendido con exito");
+					FacesContext.getCurrentInstance().addMessage(null, msg);
+				} else if (resultado == 2) {
+					msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+							"ERROR", "al atender Actividad/Compuerta");
+					FacesContext.getCurrentInstance().addMessage(null, msg);
+					return;
+				} else if (resultado == 3) {
+					msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+							"ADVERTENCIA",
+							"Primero debe atender la actividad anterior");
+					FacesContext.getCurrentInstance().addMessage(null, msg);
+					return;
+				}
+			} else if (atender.getIdProceso() == 2L) {// Resolucion
+
+				if (logicaResolucion(objBandeja)) {
+					msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "EXITO",
+							"Actividad/Compuerta atendido con exito");
+					FacesContext.getCurrentInstance().addMessage(null, msg);
+				} else {
+					msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+							"ERROR", "al atender Actividad/Compuerta");
+					FacesContext.getCurrentInstance().addMessage(null, msg);
+					return;
+				}
+			} else if (atender.getIdProceso() == 3L) {// Convenio
+
+			} else {
+				return;
+			}
+			descripcion = "";
+		} catch (Exception e) {
+			e.printStackTrace();
+			msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "ERROR",
+					"Error al atender Compuerta");
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+			return;
+		}
+
+	}
+
+	public boolean logicaResolucion(Bandeja paramBandeja) {
+		boolean resultado = false;
+		int opcion = paramBandeja.getBandejaPK().getIdActividad().intValue();
+
+		try {
+			switch (opcion) {
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+			case 8:
+			case 9:
+			case 10:
+			case 11:
+			case 12:
+			case 13:
+			case 14:
+			case 15:
+			case 16:
+			case 17:
+				if (bandejaDao.atenderActividad(paramBandeja))
+					resultado = true;
+				else
+					resultado = false;
+				break;
+			case 18:
+				if (opcionComp.equalsIgnoreCase("1")) {// SI
+					if (bandejaDao.atenderActividad(paramBandeja))
+						resultado = true;
+					else
+						resultado = false;
+				} else {
+					if (bandejaDao.concluirFlujo(paramBandeja))
+						resultado = true;
+					else
+						resultado = false;
+				}
+				break;
+			case 19:
+			case 20:
+			case 21:
+			case 22:
+				if (bandejaDao.atenderActividad(paramBandeja))
+					resultado = true;
+				else
+					resultado = false;
+				break;
+			case 23:
+				Flujo flujo = flujoDao.find(paramBandeja.getBandejaPK()
+						.getIdFlujo());
+				if (flujo.getProceso().getIdProceso() == 1L) {
+					objBandejaConcluir = bandejaDao.getBandejaPendiente(
+							paramBandeja.getBandejaPK().getIdFlujo(), 1L);
+				}
+				if (bandejaDao.concluirFlujo(paramBandeja))
+					resultado = true;
+				else
+					resultado = false;
+				break;
+			default:
+				break;
+			}
+		} catch (Exception e) {
+			resultado = false;
+			e.printStackTrace();
+			return resultado;
+		}
+		return resultado;
+	}
+
+	public int logicaConvenio(Bandeja bandeja) {
+		int resultado = 0;
+		Long idSgteAct = null;
+		Long correlativo = null;
+		BandejaPK bandejaPK = null;
+		int opcion = bandeja.getBandejaPK().getIdActividad().intValue();
+
+		try {
+			switch (opcion) {
+			case 1:
+			case 2:
+			case 3:
+				if (bandejaDao.atenderActividad(bandeja))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 4:
+				if (bandejaDao.atenderCompuertaParalela(bandeja, 1))
+					resultado = 1;
+				else
+					resultado = 2;
+
+				break;
+			case 5:
+				if (bandejaDao.atenderCompuertaParalela(bandeja, 2))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 6:
+				if (bandejaDao.atenderCompuertaParalela(bandeja, 3))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 7:
+
+				idSgteAct = bandeja.getBandejaPK().getIdActividad() - 2;
+				correlativo = bandeja.getBandejaPK().getCorrelativo() - 2;
+
+				bandejaPK = new BandejaPK(bandeja.getBandejaPK().getIdFlujo(),
+						idSgteAct, bandeja.getBandejaPK().getIdProceso(),
+						correlativo);
+
+				Bandeja objBandeja00 = bandejaDao.find(bandejaPK);
+
+				idSgteAct += 1;
+				correlativo += 1;
+
+				bandejaPK = new BandejaPK(bandeja.getBandejaPK().getIdFlujo(),
+						idSgteAct, bandeja.getBandejaPK().getIdProceso(),
+						correlativo);
+
+				Bandeja objBandeja01 = bandejaDao.find(bandejaPK);
+
+				if (!(objBandeja00.getEstado().equalsIgnoreCase("AT") && objBandeja01
+						.getEstado().equalsIgnoreCase("AT"))) {
+					resultado = 3;
+				} else {
+
+					if (bandejaDao.atenderCompuertaParalela(bandeja, 1))
+						resultado = 1;
+					else
+						resultado = 2;
+				}
+
+				break;
+			case 8:
+				if (bandejaDao.atenderCompuertaParalela(bandeja, 2))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 9:
+				if (bandejaDao.atenderCompuertaParalela(bandeja, 3))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 10:
+
+				idSgteAct = bandeja.getBandejaPK().getIdActividad() - 2;
+				correlativo = bandeja.getBandejaPK().getCorrelativo() - 2;
+
+				bandejaPK = new BandejaPK(bandeja.getBandejaPK().getIdFlujo(),
+						idSgteAct, bandeja.getBandejaPK().getIdProceso(),
+						correlativo);
+
+				Bandeja objBandeja03 = bandejaDao.find(bandejaPK);
+
+				idSgteAct += 1;
+				correlativo += 1;
+
+				bandejaPK = new BandejaPK(bandeja.getBandejaPK().getIdFlujo(),
+						idSgteAct, bandeja.getBandejaPK().getIdProceso(),
+						correlativo);
+
+				Bandeja objBandeja04 = bandejaDao.find(bandejaPK);
+
+				if (!(objBandeja03.getEstado().equalsIgnoreCase("AT") && objBandeja04
+						.getEstado().equalsIgnoreCase("AT"))) {
+					resultado = 4;
+				} else {
+					if (bandejaDao.atenderActividad(bandeja))
+						resultado = 1;
+					else
+						resultado = 2;
+				}
+				break;
+			case 11:
+			case 12:
+			case 13:
+			case 14:
+			case 15:
+				if (bandejaDao.atenderActividad(bandeja))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			case 16:
+				if (bandejaDao.concluirFlujo(bandeja))
+					resultado = 1;
+				else
+					resultado = 2;
+				break;
+			default:
+				break;
+			}
+		} catch (Exception e) {
+			resultado = 2;
+			e.printStackTrace();
+			return resultado;
+		}
+		return resultado;
+	}
+
+	public void handleFileUpload(FileUploadEvent event) {
+		Archivo archivo = new Archivo();
+		msgDoc = "";
+		try {
+			UploadedFile fu = event.getFile();
+			fileName = fu.getFileName();
+
+			File file = new File(archivo.obtieneRuta(), fileName);
+			FileOutputStream salida = new FileOutputStream(file);
+			salida.write(fu.getContents());
+			salida.flush();
+			salida.close();
+
+			String pathFile = file.getPath();
+
+			bFile = archivo.read(new File(pathFile));
+
+			file.delete();
+			archivo = null;
+
+			msgDoc = fileName + " cargado con exito.";
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			msgDoc = "Error al cargar archivo";
+		}
+	}
+
+	public void agregar() {
+		validarSesion();
+
+		try {
+
+			if (!validarAgregar())
+				return;
+
+			TipoDocumento tipoDoc = tipoDocDao.find(docSelec);
+			BandejaPK bandejaPK = new BandejaPK(atender.getIdFlujo(),
+					atender.getIdActividad(), atender.getIdProceso(),
+					atender.getCorrelativo());
+			Bandeja bandeja = bandejaDao.find(bandejaPK);
+			detalle.setBandeja(bandeja);
+			detalle.setTipoDocumento(tipoDoc);
+			detalle.setFechaCreacion(new Date());
+			detalle.setFechaModificacion(new Date());
+			detalle.setUsuarioRegistra(userSesion.getUsuario());
+			detalle.setUsuarioModifica(userSesion.getUsuario());
+			detalle.setEstado("A");
+			detalle.setUrlDocumento(fileName);
+			detalle.setDocBlob(bFile);
+			detalle.setIdDetalle(detalleBandejaDao.getIdMax());
+
+			detalleBandejaDao.save(detalle);
+
+			reset();
+
+			msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "EXITO",
+					"Documento agreado con exito.");
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+		} catch (Exception e) {
+			e.printStackTrace();
+			msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "ERROR",
+					"error al registrar.");
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+		}
+	}
+
+	public boolean validarAgregar() {
+
+		if (docSelec == 0L) {
+			msg = new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+					"Seleccione tipo documento.");
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+			return false;
+		}
+
+		if (detalle.getNroDoc() == null
+				|| detalle.getNroDoc().equalsIgnoreCase("")) {
+			msg = new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+					"Ingrese Número Doc.");
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+			return false;
+		}
+
+		if (validarNroDoc()) {
+			msg = new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+					"Número Doc. ya existe.");
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+			return false;
+		}
+
+		if (fileName == "" || bFile == null) {
+			msg = new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+					"Adjunte documento.");
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+			return false;
+		}
+
+		return true;
+	}
+
+	private boolean validarNroDoc() {
+
+		BandejaPK bandejaPK = new BandejaPK(atender.getIdFlujo(),
+				atender.getIdActividad(), atender.getIdProceso(),
+				atender.getCorrelativo());
+
+		List<Documento> listDetalle = detalleBandejaDao.getListaValidarNroDoc(
+				bandejaPK, detalle.getNroDoc());
+
+		if (listDetalle.size() > 0)
+			return true;
+		else
+			return false;
+	}
+
+	public void eliminarDoc() {
+		validarSesion();
+		try {
+			detalleBandejaDao.delete(detalleSelec);
+			detalleSelec = null;
+			msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "EXITO",
+					"Documento eliminado con exito.");
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+		} catch (Exception e) {
+			e.printStackTrace();
+			msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "ERROR",
+					"Error al eliminar documento.");
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+		}
+	}
+
+	public void editSelec() {
+
+		if (detalle != null) {
+			fileName = detalle.getUrlDocumento();
+			bFile = detalle.getDocBlob();
+		}
+
+	}
+
+	public void reset() {
+		fileName = "";
+		bFile = null;
+		detalle = new Documento();
+		docSelec = 0L;
+		msgDoc = "";
+	}
+
+	public void limpiar() {
+		reset();
+		BandejaPK bandejaPK = new BandejaPK(atender.getIdFlujo(),
+				atender.getIdActividad(), atender.getIdProceso(),
+				atender.getCorrelativo());
+		Bandeja bandejaBd = bandejaDao.find(bandejaPK);
+		bandejaBd.setDescripcion(null);
+		bandejaDao.save(bandejaBd);
+		bandeja = new Bandeja();
+
+		for (Documento doc : listDetalle) {
+			detalleBandejaDao.delete(doc);
+		}
+
+	}
+
+	public boolean validarAtenderActividad() {
+
+		if (validarAtender()) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "ADVERTENCIA",
+							"Primero debe guardar los cambios realizados"));
+			return true;
+		}
+
+		return false;
+	}
+
+	public void mensajeAtender() {
+
+		FacesContext.getCurrentInstance().addMessage(null, msg);
+
+	}
+
+}

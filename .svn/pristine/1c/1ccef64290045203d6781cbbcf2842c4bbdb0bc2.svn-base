@@ -1,0 +1,21 @@
+package gob.servir.workflow.dao;
+
+import gob.servir.workflow.model.DetalleFlujo;
+
+import java.util.List;
+
+import javax.faces.model.SelectItem;
+
+public interface DetalleFlujoDao {
+	
+	public abstract DetalleFlujo find(Long id);
+	
+	public abstract DetalleFlujo save(DetalleFlujo obj);
+	
+	public abstract List<DetalleFlujo> getListaDetalleFlujo();
+	
+	public abstract List<SelectItem> getComboDetalleFlujo();
+	
+	public abstract List<DetalleFlujo> getListFlujo(Long idFlujo);
+
+}

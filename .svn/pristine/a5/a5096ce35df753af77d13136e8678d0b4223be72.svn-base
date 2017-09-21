@@ -1,0 +1,109 @@
+package gob.servir.workflow.daoImpl;
+
+import gob.servir.workflow.dao.DetalleActividadDao;
+import gob.servir.workflow.model.ActividadPK;
+import gob.servir.workflow.model.DetalleActividad;
+
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+@Repository
+public class DetalleActividadDaoImpl implements DetalleActividadDao {
+	@PersistenceContext
+	private EntityManager em;
+
+	public DetalleActividad find(Long id) {
+		return em.find(DetalleActividad.class, id);
+	}
+
+	@Transactional
+	public DetalleActividad save(DetalleActividad obj) {
+		em.persist(obj);
+		return obj;
+	}
+
+	@Transactional
+	public DetalleActividad edit(DetalleActividad obj) {
+		return em.merge(obj);
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<DetalleActividad> getListaDetalleActividad() {
+		Query q = (Query) em
+				.createQuery("select d from DetalleActividad d where d.estado =:estado");
+		q.setParameter("estado", "A");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA DETALLE ACTIVIDAD VACIO");
+			return null;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<DetalleActividad> getListaDetalleActividad(ActividadPK id) {
+		Query q = (Query) em
+				.createQuery("select d from DetalleActividad d where d.actividad.id.idActividad = :idActividad and d.actividad.id.idProceso = :idProceso and d.estado =:estado " +
+						"order by d.tipoDocumento.nombre asc");
+		q.setParameter("idActividad", id.getIdActividad());
+		q.setParameter("idProceso", id.getIdProceso());
+		q.setParameter("estado", "A");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA DETALLE ACTIVIDAD VACIO");
+			return null;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<DetalleActividad> getListaDetalleActividad(ActividadPK id,
+			Long idTipoDoc) {
+		Query q = (Query) em
+				.createQuery("select d from DetalleActividad d where d.actividad.id.idActividad = :idActividad and d.actividad.id.idProceso = :idProceso and d.tipoDocumento.idTipoDocumento =:idTipoDoc");
+		q.setParameter("idActividad", id.getIdActividad());
+		q.setParameter("idProceso", id.getIdProceso());
+		q.setParameter("idTipoDoc", idTipoDoc);
+		// q.setParameter("estado", "A");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA DETALLE ACTIVIDAD VACIO");
+			return null;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<DetalleActividad> getListaDetalleActividad(Long idActividad,
+			Long idTipoDoc) {
+		Query q = (Query) em
+				.createQuery("select d from DetalleActividad d where d.actividad.idActividad = :idActividad and d.tipoDocumento.idTipoDocumento =:idTipoDoc");
+		q.setParameter("idActividad", idActividad);
+		q.setParameter("idTipoDoc", idTipoDoc);
+		// q.setParameter("estado", "A");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA DETALLE ACTIVIDAD VACIO");
+			return null;
+		}
+	}
+
+	public Long getIdMax() {
+		try {
+			return (Long) em.createQuery(
+					"select max(r.idDetalleActividad) from DetalleActividad r")
+					.getSingleResult() + 1L;
+		} catch (Exception e) {
+
+		}
+		return 1L;
+	}
+
+}

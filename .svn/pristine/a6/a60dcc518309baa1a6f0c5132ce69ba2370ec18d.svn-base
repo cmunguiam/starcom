@@ -1,0 +1,338 @@
+package gob.servir.workflow.controller;
+
+import gob.servir.workflow.bean.ModelTableBandeja;
+import gob.servir.workflow.dao.BandejaDao;
+import gob.servir.workflow.dao.DocumentoDao;
+import gob.servir.workflow.model.Bandeja;
+import gob.servir.workflow.model.Documento;
+import gob.servir.workflow.model.Usuario;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
+import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
+
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.LazyDataModel;
+import org.primefaces.model.SortOrder;
+import org.primefaces.model.StreamedContent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component("detalleBandejaController")
+@Scope("session")
+public class DetalleBandejaController {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(DetalleBandejaController.class);
+
+	@Autowired
+	private LoginController loginController;
+	@Autowired
+	private BandejaDao bandejaDao;
+	@Autowired
+	private DocumentoDao detalleBandejaDao;
+
+	private Long idFlujo = 0L;
+	private List<Bandeja> lisBandeja = new ArrayList<Bandeja>();
+	private List<Documento> lisDetalleBandeja = new ArrayList<Documento>();
+
+	private Bandeja bandeja = null;
+	private Bandeja bandejaSelec = null;
+	private Documento detalle = null;
+
+	private StreamedContent file3;
+	private byte[] rawFile = null;
+
+	private boolean btnflujoVolver = true;
+	private boolean btnbandejaVolver = true;
+
+	private LazyDataModel<Bandeja> lazyModel;
+	private ModelTableBandeja modelTableBandejaSelec = new ModelTableBandeja();
+	private ModelTableBandeja modelTableBandejaSelec2 = new ModelTableBandeja();
+	private Long rolSelec = 0L;
+	private Usuario userSesion = null;
+
+	private String descripcion = "";
+	private List<SelectItem> comboCompuerta = new ArrayList<SelectItem>();
+	private String opcionComp = "2";
+	private boolean swFlujo = false;
+	private boolean swaAtendioFlujo = false;
+	private String estadoFlujo = null;
+
+	public DetalleBandejaController() {
+
+	}
+
+	@PostConstruct
+	public void init() {
+		validarSesion();
+	}
+
+	public String getEstadoFlujo() {
+		return estadoFlujo;
+	}
+
+	public void setEstadoFlujo(String estadoFlujo) {
+		this.estadoFlujo = estadoFlujo;
+	}
+
+	public boolean isSwFlujo() {
+		return swFlujo;
+	}
+
+	public void setSwFlujo(boolean swFlujo) {
+		this.swFlujo = swFlujo;
+	}
+
+	public boolean isSwaAtendioFlujo() {
+		return swaAtendioFlujo;
+	}
+
+	public void setSwaAtendioFlujo(boolean swaAtendioFlujo) {
+		this.swaAtendioFlujo = swaAtendioFlujo;
+	}
+
+	public String getOpcionComp() {
+		return opcionComp;
+	}
+
+	public void setOpcionComp(String opcionComp) {
+		this.opcionComp = opcionComp;
+	}
+
+	public List<SelectItem> getComboCompuerta() {
+		comboCompuerta = new ArrayList<SelectItem>();
+		SelectItem item = null;
+		item = new SelectItem("1", "Si");
+		comboCompuerta.add(item);
+		item = new SelectItem("2", "No");
+		comboCompuerta.add(item);
+		return comboCompuerta;
+	}
+
+	public void setComboCompuerta(List<SelectItem> comboCompuerta) {
+		this.comboCompuerta = comboCompuerta;
+	}
+
+	public ModelTableBandeja getModelTableBandejaSelec2() {
+		return modelTableBandejaSelec2;
+	}
+
+	public void setModelTableBandejaSelec2(
+			ModelTableBandeja modelTableBandejaSelec2) {
+		this.modelTableBandejaSelec2 = modelTableBandejaSelec2;
+	}
+
+	public String getDescripcion() {
+		return descripcion;
+	}
+
+	public void setDescripcion(String descripcion) {
+		this.descripcion = descripcion;
+	}
+
+	public Long getRolSelec() {
+		rolSelec = userSesion.getRol().getIdRol();
+		return rolSelec;
+	}
+
+	public void setRolSelec(Long rolSelec) {
+		this.rolSelec = rolSelec;
+	}
+
+	public ModelTableBandeja getModelTableBandejaSelec() {
+		return modelTableBandejaSelec;
+	}
+
+	public void setModelTableBandejaSelec(
+			ModelTableBandeja modelTableBandejaSelec) {
+		this.modelTableBandejaSelec = modelTableBandejaSelec;
+	}
+
+	public void setLazyModel(LazyDataModel<Bandeja> lazyModel) {
+		this.lazyModel = lazyModel;
+	}
+
+	public Bandeja getBandejaSelec() {
+		return bandejaSelec;
+	}
+
+	public void setBandejaSelec(Bandeja bandejaSelec) {
+		this.bandejaSelec = bandejaSelec;
+	}
+
+	@SuppressWarnings("serial")
+	public LazyDataModel<Bandeja> getLazyModel() {
+		lazyModel = new LazyDataModel<Bandeja>() {
+			@SuppressWarnings("rawtypes")
+			@Override
+			public List<Bandeja> load(int first, int pageSize,
+					String sortField, SortOrder sortOrder, Map filters) {
+				return bandejaDao
+						.getFindManufacturers(first, pageSize, idFlujo);
+			}
+		};
+		lazyModel.setRowCount(bandejaDao.getTotalManufacturers(idFlujo));
+		return lazyModel;
+	}
+
+	public void setFile3(StreamedContent file3) {
+		this.file3 = file3;
+	}
+
+	public StreamedContent getFile3() {
+
+		try {
+			if (detalle != null) {
+
+				rawFile = detalle.getDocBlob();
+
+				if (rawFile != null) {
+					ByteArrayInputStream bai = new ByteArrayInputStream(rawFile);
+
+					String extension = detalle.getUrlDocumento().substring(
+							detalle.getUrlDocumento().lastIndexOf(".") + 1);
+
+					InputStream stream = bai;
+					file3 = new DefaultStreamedContent(stream, "application/"
+							+ extension, detalle.getUrlDocumento());
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return file3;
+	}
+
+	public byte[] getRawFile() {
+		return rawFile;
+	}
+
+	public void setRawFile(byte[] rawFile) {
+		this.rawFile = rawFile;
+	}
+
+	public Long getIdFlujo() {
+		return idFlujo;
+	}
+
+	public Documento getDetalle() {
+		return detalle;
+	}
+
+	public void setDetalle(Documento detalle) {
+		this.detalle = detalle;
+	}
+
+	public void setIdFlujo(Long idFlujo) {
+		this.idFlujo = idFlujo;
+	}
+
+	public List<Bandeja> getLisBandeja() {
+		lisBandeja.clear();
+		if (idFlujo != 0L)
+			lisBandeja = bandejaDao.getListaBandeja(idFlujo);
+		return lisBandeja;
+	}
+
+	public void setLisBandeja(List<Bandeja> lisBandeja) {
+		this.lisBandeja = lisBandeja;
+	}
+
+	public Bandeja getBandeja() {
+		return bandeja;
+	}
+
+	public void setBandeja(Bandeja bandeja) {
+		this.bandeja = bandeja;
+	}
+
+	public List<Documento> getLisDetalleBandeja() {
+		lisDetalleBandeja.clear();
+
+		if (bandejaSelec != null)
+			lisDetalleBandeja = detalleBandejaDao
+					.getListaDetalleBandeja(bandejaSelec.getBandejaPK());
+		return lisDetalleBandeja;
+	}
+
+	public void setLisDetalleBandeja(List<Documento> lisDetalleBandeja) {
+		this.lisDetalleBandeja = lisDetalleBandeja;
+	}
+
+	public boolean isBtnflujoVolver() {
+		return btnflujoVolver;
+	}
+
+	public void setBtnflujoVolver(boolean btnflujoVolver) {
+		this.btnflujoVolver = btnflujoVolver;
+	}
+
+	public boolean isBtnbandejaVolver() {
+		return btnbandejaVolver;
+	}
+
+	public void setBtnbandejaVolver(boolean btnbandejaVolver) {
+		this.btnbandejaVolver = btnbandejaVolver;
+	}
+
+	public void validarSesion() {
+		FacesContext context = FacesContext.getCurrentInstance();
+
+		userSesion = (Usuario) context.getExternalContext().getSessionMap()
+				.get(loginController.getUsername());
+
+		if (userSesion == null) {
+			String ctxPath = context.getExternalContext()
+					.getRequestContextPath();
+			try {
+				context.getExternalContext().redirect(ctxPath + "/login.jsf");
+			} catch (Exception e) {
+				// e.printStackTrace();
+			}
+		}
+	}
+
+	public void atenderFlujo(Bandeja ban) {
+		try {
+
+			if (swFlujo) {
+
+				modelTableBandejaSelec.setIdFlujo(ban.getBandejaPK()
+						.getIdFlujo());
+				modelTableBandejaSelec.setIdProceso(ban.getBandejaPK()
+						.getIdProceso());
+				modelTableBandejaSelec.setIdActividad(ban.getBandejaPK()
+						.getIdActividad());
+				modelTableBandejaSelec.setCorrelativo(ban.getBandejaPK()
+						.getCorrelativo());
+				modelTableBandejaSelec.setTipo(ban.getActividad().getTipo());
+				modelTableBandejaSelec.setNombreActividad(ban.getActividad()
+						.getNombre());
+				modelTableBandejaSelec.setDescripcionActividad(ban
+						.getActividad().getDescripcion());
+				modelTableBandejaSelec.setDescripcionActividad(ban
+						.getActividad().getDescripcion());
+				modelTableBandejaSelec.setEstadoFlujo(modelTableBandejaSelec2
+						.getEstadoFlujo());
+
+				swaAtendioFlujo = true;
+				swFlujo = false;
+
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}

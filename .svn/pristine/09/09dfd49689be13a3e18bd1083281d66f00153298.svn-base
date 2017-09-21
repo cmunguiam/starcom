@@ -1,0 +1,167 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions">
+<h:head>
+	<h:outputStylesheet name="css/cssContent.css" />
+	<script type="text/javascript">
+		function showStatus1() {
+			statusDialog.show();
+		}
+		function hideStatus1() {
+			statusDialog.hide();
+		}
+	</script>
+
+</h:head>
+<h:body>
+	<p:growl id="messages" showDetail="true" life="40000" />
+
+	<p:panel id="datos" header="Reporte de Atención Actividad/Compuerta">
+
+		<p:panelGrid styleClass="panelGrid">
+			<p:row>
+				<p:column>
+					<h:outputText value="Flujo N°: " style="font-weight:bold;" />
+				</p:column>
+				<p:column>
+					<p:selectOneMenu id="comboFlujo"
+						value="#{reporteFlujoController.flujoSelec}" style="width:240px;"
+						tabindex="1" filter="true" effect="fade">
+						<f:selectItems value="#{reporteFlujoController.listaFlujo}" />
+						<p:ajax listener="#{reporteFlujoController.buscarFlujo}" event="change"
+							update=":frm:messages,:frm:dtLista,:frm:datos,:frm:link" />
+					</p:selectOneMenu>
+				</p:column>
+
+				<p:column>
+					<h:commandLink
+						onclick="PrimeFaces.monitorDownload(showStatus1,hideStatus1)"
+						id="link" disabled="#{reporteFlujoController.flujoSelec == 0}">
+						<p:graphicImage value="./imagenes/export1.png" width="25"
+							height="25" />
+						<p:dataExporter type="xls" target="dtLista" fileName="model"
+							postProcessor="#{reporteFlujoController.postProcessXLS}" />
+					</h:commandLink>
+					<pe:tooltip for="link" value="Descargar reporte" showEffect="fadeIn"
+						hideEffect="fadeIn" myPosition="left center"
+						atPosition="right center" />
+
+
+				</p:column>
+			</p:row>
+
+		</p:panelGrid>
+		<p:dialog modal="true" widgetVar="statusDialog" header="Status"
+			draggable="false" closable="true">
+			<p:graphicImage value="./imagenes/ajax-loader.gif" />
+		</p:dialog>
+		<p:panel id="panelVisibleNoVisible"
+			visible="#{reporteFlujoController.flujoSelec >0}">
+			<table width="100%" cellpadding="2" cellspacing="2">
+				<tr>
+					<td><h:outputText value="Flujo Número:"
+							style="font-weight:bold;" /></td>
+					<td><h:outputText
+							value="#{reporteFlujoController.modelTableBandejaSelec.idFlujo}"
+							style=" width : 60px;color:blue" /></td>
+					<td><h:outputText value="Entidad Destino:"
+							style="font-weight:bold;" /></td>
+					<td><h:outputText
+							value="#{reporteFlujoController.modelTableBandejaSelec.nombreEntidad}" /></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="Puesto Tipo:"
+							style="font-weight:bold;" /></td>
+					<td><h:outputText
+							value="#{reporteFlujoController.modelTableBandejaSelec.nombrePuesto}" />
+					</td>
+					<td><h:outputText value="Proceso:" style="font-weight:bold;" /></td>
+					<td><h:outputText
+							value="#{reporteFlujoController.modelTableBandejaSelec.nombreProceso}" /></td>
+				</tr>
+				<tr>
+					<td><h:outputText value="Gerente Público:"
+							style="font-weight:bold;" /></td>
+					<td><h:outputText
+							value="#{reporteFlujoController.modelTableBandejaSelec.nombreGerente}" /></td>
+					<td><h:outputText value="Estado:" style="font-weight:bold;" /></td>
+					<td><h:outputText
+							value="#{reporteFlujoController.modelTableBandejaSelec.estadoFlujo.equals('P')?'Pendiente':reporteFlujoController.modelTableBandejaSelec.estadoFlujo.equals('AT')?'Terminado':'Cancelado'}" /></td>
+				</tr>
+			</table>
+		</p:panel>
+
+		<p:dataTable var="model" value="#{reporteFlujoController.listBandeja}"
+			id="dtLista" style="width:100%" rows="15" paginator="true"
+			paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			rowsPerPageTemplate="5,10,15"
+			emptyMessage="#{messages.msgEmptyMessage}">
+			<f:facet name="header">   
+            Lista de Actividad/Compuerta
+        </f:facet>
+			<!-- 			<p:column headerText="N°" -->
+			<!-- 				style="width:8%; white-space: normal;text-align: justify"> -->
+			<!-- 				<h:outputText value="#{model.idFlujo}" sortBy="#{rol.idRol}" /> -->
+			<!-- 			</p:column> -->
+			<p:column headerText="N°"
+				style="width:5%; white-space: normal;text-align: justify">
+				<h:outputText value="#{model.correlativo}" />
+			</p:column>
+			<!-- 			<p:column headerText="Entidad Destino" -->
+			<!-- 				style="width:50%; white-space: normal;"> -->
+			<!-- 				<h:outputText value="#{model.nombreEntidad}" -->
+			<!-- 					sortBy="#{model.nombreEntidad}" /> -->
+			<!-- 			</p:column> -->
+			<!--<p:column headerText="Puesto Tipo" style="width:50%">
+					<h:outputText value="#{model.nombrePuesto}"
+						sortBy="#{model.nombrePuesto}" />
+				</p:column>-->
+			<p:column headerText="Proceso" style="width:20%">
+				<h:outputText value="#{model.nombreProceso}"
+					sortBy="#{model.nombreProceso}" />
+			</p:column>
+			<p:column headerText="Actividad/Compuerta"
+				style="width:30%; white-space: normal;">
+				<h:outputText value="#{model.nombreActividad}"
+					sortBy="#{model.nombreActividad}" id="nombAct" />
+			</p:column>
+			<p:column headerText="Estado" style="width:10%">
+				<h:outputText
+					value="#{model.estadoBandeja.equals('AT')?'Atendido':'Pendiente'}" />
+			</p:column>
+			<p:column headerText="Fecha Creación" style="width:10%">
+				<h:outputText value="#{model.fechaCreacion}">
+					<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+				</h:outputText>
+			</p:column>
+			<p:column headerText="Fecha Atención" style="width:10%">
+				<h:outputText value="#{model.fechaAtencion}">
+					<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+				</h:outputText>
+			</p:column>
+			<p:column headerText="Tpo. Atención" style="width:10%">
+				<h:outputText value="#{model.diasAtencion} dias" />
+			</p:column>
+
+
+		</p:dataTable>
+
+	</p:panel>
+</h:body>
+<p:ajaxStatus
+	style="width:64px;height:64px;position:fixed;right:5px;bottom:5px"
+	id="ajaxStatusPanel">
+	<f:facet name="start">
+		<p:graphicImage value="./imagenes/loading.gif" />
+	</f:facet>
+
+	<f:facet name="complete">
+		<h:outputText value="" />
+	</f:facet>
+</p:ajaxStatus>
+</html>

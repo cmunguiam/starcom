@@ -1,0 +1,58 @@
+package gob.servir.workflow.daoImpl;
+
+import gob.servir.workflow.dao.PuestoTipoDao;
+import gob.servir.workflow.model.PuestoTipo;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.faces.model.SelectItem;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class PuestoTipoDaoImpl implements PuestoTipoDao {
+	@PersistenceContext
+	private EntityManager em;
+
+	public PuestoTipo find(Long id) {
+		return em.find(PuestoTipo.class, id);
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<PuestoTipo> getListaPuesto() {
+		Query q = (Query) em.createQuery("SELECT p FROM PuestoTipo p ");
+		try {
+			return q.getResultList();
+		} catch (Exception as) {
+			System.out.println("LISTA PUESTO TIPO VACIO");
+			return null;
+		}
+	}
+
+	public List<SelectItem> getComboPuesto() {
+
+		List<SelectItem> listaCombo = new ArrayList<SelectItem>();
+		List<PuestoTipo> lista = new ArrayList<PuestoTipo>();
+		try {
+			lista = getListaPuesto();
+		} catch (Exception as) {
+			as.printStackTrace();
+			SelectItem fila = new SelectItem(0L, "Seleccione Puesto Tipo");
+			listaCombo.add(fila);
+			return listaCombo;
+		}
+		SelectItem fila = new SelectItem(0L, "Seleccione Puesto Tipo");
+		listaCombo.add(fila);
+
+		for (PuestoTipo tipo : lista) {
+			fila = new SelectItem(tipo.getIdPuesto(), tipo.getNombre());
+			listaCombo.add(fila);
+		}
+		return listaCombo;
+	}
+
+}

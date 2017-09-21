@@ -1,0 +1,21 @@
+package gob.servir.workflow.dao;
+
+import gob.servir.workflow.model.Usuario;
+
+import java.util.List;
+
+public interface UsuarioDao {
+	
+	public abstract Usuario find(Long id);
+	
+	public abstract Usuario save(Usuario obj);
+	
+	public abstract List<Usuario> getListaUsuario();
+	
+	public abstract Usuario findUsuarioByUsername(String username); 
+	
+	public abstract Long getIdMax();
+
+	public abstract List<Usuario> getListByUsername(String username);
+	
+}

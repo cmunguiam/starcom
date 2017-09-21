@@ -1,0 +1,161 @@
+package gob.servir.workflow.controller;
+
+import gob.servir.workflow.bean.ModelTableBandeja;
+import gob.servir.workflow.dao.FlujoDao;
+import gob.servir.workflow.model.Bandeja;
+import gob.servir.workflow.model.Usuario;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component("bandejaController")
+@Scope("session")
+public class BandejaController {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(BandejaController.class);
+
+	@Autowired
+	private LoginController loginController;
+	@Autowired
+	private FlujoDao flujoDao;
+
+	private Bandeja bandeja = new Bandeja();
+	private ModelTableBandeja atender = null;
+	private List<ModelTableBandeja> listFlujo = new ArrayList<ModelTableBandeja>();
+	private boolean misPendientes = false;
+
+	private List<SelectItem> comboCompuerta = new ArrayList<SelectItem>();
+	private String opcionComp = "2";
+	private String descripcion = "";
+	private Long rolSelec = 0L;
+	private boolean swFlujo = false;
+
+	private Usuario userSesion = null;
+
+	public BandejaController() {
+		misPendientes = false;
+	}
+
+	@PostConstruct
+	public void init() {
+		validarSesion();
+	}
+
+	public boolean isSwFlujo() {
+		return swFlujo;
+	}
+
+	public void setSwFlujo(boolean swFlujo) {
+		this.swFlujo = swFlujo;
+	}
+
+	public Long getRolSelec() {
+		rolSelec = userSesion.getRol().getIdRol();
+		return rolSelec;
+	}
+
+	public void setRolSelec(Long rolSelec) {
+		this.rolSelec = rolSelec;
+	}
+
+	public String getDescripcion() {
+		return descripcion;
+	}
+
+	public void setDescripcion(String descripcion) {
+		this.descripcion = descripcion;
+	}
+
+	public List<SelectItem> getComboCompuerta() {
+		comboCompuerta = new ArrayList<SelectItem>();
+		SelectItem item = null;
+		item = new SelectItem("1", "Si");
+		comboCompuerta.add(item);
+		item = new SelectItem("2", "No");
+		comboCompuerta.add(item);
+		return comboCompuerta;
+	}
+
+	public void setComboCompuerta(List<SelectItem> comboCompuerta) {
+		this.comboCompuerta = comboCompuerta;
+	}
+
+	public String getOpcionComp() {
+		return opcionComp;
+	}
+
+	public void setOpcionComp(String opcionComp) {
+		this.opcionComp = opcionComp;
+	}
+
+	public ModelTableBandeja getAtender() {
+		return atender;
+
+	}
+
+	public void setAtender(ModelTableBandeja atender) {
+		this.atender = atender;
+	}
+
+	public void validarSesion() {
+		FacesContext context = FacesContext.getCurrentInstance();
+		
+		userSesion = (Usuario) context.getExternalContext().getSessionMap()
+				.get(loginController.getUsername());
+
+		if (userSesion == null) {
+			String ctxPath = context.getExternalContext()
+					.getRequestContextPath();
+			try {
+				context.getExternalContext().redirect(ctxPath + "/login.jsf");
+			} catch (Exception e) {
+				//e.printStackTrace();
+			}
+		}
+	}
+
+	public boolean isMisPendientes() {
+		return misPendientes;
+	}
+
+	public void setMisPendientes(boolean misPendientes) {
+		this.misPendientes = misPendientes;
+	}
+
+	public List<ModelTableBandeja> getListFlujo() {
+		validarSesion();
+		listFlujo.clear();
+		if (misPendientes == false) {
+			listFlujo = flujoDao.getListaFlujo("P");
+		} else {
+			listFlujo = flujoDao.getListaFlujo("P", userSesion.getRol()
+					.getIdRol());
+		}
+
+		return listFlujo;
+	}
+
+	public void setListFlujo(List<ModelTableBandeja> listFlujo) {
+		this.listFlujo = listFlujo;
+	}
+
+	public Bandeja getBandeja() {
+		return bandeja;
+	}
+
+	public void setBandeja(Bandeja bandeja) {
+		this.bandeja = bandeja;
+	}
+
+}
