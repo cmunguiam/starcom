@@ -149,11 +149,7 @@ public class UsuarioController {
 		try {
 
 			nuevo.setIdUsuario(usuarioDao.getIdMax());
-			nuevo.setRol(rolDao.find(rolSelec));
-			nuevo.setUsuarioRegistra(userSesion.getUsuario());
-			nuevo.setFechaCreacion(new Date());
-			nuevo.setUsuarioModifica(userSesion.getUsuario());
-			nuevo.setFechaModificacion(new Date());
+			nuevo.setRol(rolDao.find(rolSelec));		
 			nuevo.setPassword(Seguridad.encrypt(nuevo.getClave()));
 			nuevo.setEstado("A");
 
@@ -185,9 +181,7 @@ public class UsuarioController {
 		try {
 
 			validarModificar();
-
-			modifica.setUsuarioModifica(userSesion.getUsuario());
-			modifica.setFechaModificacion(new Date());
+			
 			usuarioDao.save(modifica);
 			FacesContext.getCurrentInstance().addMessage(
 					null,
