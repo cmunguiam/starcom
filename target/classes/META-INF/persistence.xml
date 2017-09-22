@@ -6,7 +6,7 @@
 	version="1.0">
 	<persistence-unit name="acme" transaction-type="RESOURCE_LOCAL">
 		<!-- -->
-		<jta-data-source>java:jboss/datasources/starcom</jta-data-source>
+<!-- 		<jta-data-source>java:jboss/datasources/starcom</jta-data-source> -->
 		<class>pe.com.starcom.model.ItemMenu</class>
 		<class>pe.com.starcom.model.Menu</class>
 		<class>pe.com.starcom.model.Permiso</class>

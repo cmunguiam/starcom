@@ -43,3 +43,8 @@
 	background: #FFFF66;
 }
 
+.bien{
+	background-image: url('../../imagenes/fondo_login.png');
+	background-repeat: repeat-x;
+}
+

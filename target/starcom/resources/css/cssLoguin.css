@@ -24,18 +24,20 @@ body {
 }
 
 .contenedor .header .encabezado {
-	width: 549px;
+	width: 80px;
 	height: 67px;;
-	background-image: url('../../imagenes/encabezado.png');
+	background-image: url('../../imagenes/logo2.png');
 	float: left;
+	background-repeat: no-repeat;
 }
 
 .contenedor .header .logo {
-	width: 200px;
-	height: 67px;;
-	background-image: url('../../imagenes/logo_servir.png');
-	float: right;
-	margin-right: 10px;
+	width: 255px;
+	height: 75px;;
+	background-image: url('../../imagenes/logo3.png');
+	float: left;
+	
+	background-repeat: no-repeat;
 }
 
 .contenedor .franja {
@@ -87,7 +89,7 @@ body {
 	width: 430px;
 	float: left;
 	height: 21px;
-	font-size: 9pt;
+	font-size: 11pt;
 	margin-bottom: 10px;
 }
 
@@ -128,7 +130,7 @@ body {
 }
 
 .contenedor .main .der .boton {
-	width: 129px;
+	width: 150px;
 	height: 30px;
 	float: left;
 	margin-bottom: 10px;

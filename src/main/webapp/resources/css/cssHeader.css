@@ -28,9 +28,9 @@ body {
 }
 
 .der .titulo{
-	width: 804px;
+	width: 704px;
 	height: 30px;
-	float: left;
+	float: right;
 	margin-top:15px;
 	margin-bottom:10px;
 	line-height:30px;

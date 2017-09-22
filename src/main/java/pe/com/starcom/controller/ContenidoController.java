@@ -116,7 +116,10 @@ public class ContenidoController implements Serializable {
 				nombreControl = "tipoDocumentoController";
 			} else if (nombre.equalsIgnoreCase("contenido/usuario.xhtml")) {
 				nombreControl = "usuarioController";
+			}else if (nombre.equalsIgnoreCase("contenido/afiliacion.xhtml")) {
+				nombreControl = "afiliacionController";
 			}
+			
 
 			if (nombreControl.length() > 0) {
 				FacesContext context = FacesContext.getCurrentInstance();

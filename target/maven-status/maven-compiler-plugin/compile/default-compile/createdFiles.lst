@@ -8,6 +8,7 @@ pe\com\starcom\util\AccesoJdbc.class
 pe\com\starcom\security\MyAuthenticationProvider.class
 pe\com\starcom\util\StringUtils.class
 pe\com\starcom\daoImpl\RolDaoImpl.class
+pe\com\starcom\controller\AfiliarController.class
 pe\com\starcom\model\Usuario.class
 pe\com\starcom\controller\LoginController.class
 pe\com\starcom\dao\RolDao.class
